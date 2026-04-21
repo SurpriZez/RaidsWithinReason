@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- Delivery point: a map-free world object the player sends a caravan to -->
+  <WorldObjectDef>
+    <defName>RWR_DeliveryPoint</defName>
+    <label>delivery point</label>
+    <worldObjectClass>RaidsWithinReason.RWR_DeliveryPoint</worldObjectClass>
+  </WorldObjectDef>
+
+  <!-- Quest script: rootSelectionWeight=0 so the storyteller never fires it automatically.
+       Only generated programmatically when the player accepts a negotiator's demand. -->
+  <RimWorld.QuestScriptDef>
+    <defName>RWR_NegotiatorDemand</defName>
+    <rootSelectionWeight>0</rootSelectionWeight>
+<root Class="RaidsWithinReason.QuestNode_BuildNegotiationQuest" />
+  </RimWorld.QuestScriptDef>
+
+</Defs>

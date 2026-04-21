@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <!-- Marker hediff: no stages, no effects, just a visible label on the pawn -->
+  <HediffDef>
+    <defName>RWR_Negotiator</defName>
+    <label>negotiator</label>
+    <description>This pawn is acting as an official negotiator for their faction.</description>
+    <hediffClass>Verse.Hediff</hediffClass>
+    <isBad>false</isBad>
+    <scenarioCanAdd>false</scenarioCanAdd>
+  </HediffDef>
+
+  <!-- LetterDefs for custom ChoiceLetter subclasses -->
+  <Verse.LetterDef>
+    <defName>RWR_NegotiatorArrival</defName>
+    <label>negotiator arrival</label>
+    <letterClass>RaidsWithinReason.ChoiceLetter_NegotiatorArrival</letterClass>
+  </Verse.LetterDef>
+
+  <Verse.LetterDef>
+    <defName>RWR_RaidGoalAnnouncement</defName>
+    <label>raid goal announcement</label>
+    <letterClass>RaidsWithinReason.ChoiceLetter_RaidGoalAnnouncement</letterClass>
+  </Verse.LetterDef>
+
+  <!-- Incident: fires on the player home map, not before day 10, lower weight than standard raids -->
+  <RimWorld.IncidentDef>
+    <defName>RWR_NegotiatorArrival</defName>
+    <label>negotiator arrival</label>
+    <category>Misc</category>
+    <workerClass>RaidsWithinReason.IncidentWorker_NegotiatorArrival</workerClass>
+    <baseChance>1</baseChance>
+    <targetTags>
+      <li>Map_PlayerHome</li>
+    </targetTags>
+  </RimWorld.IncidentDef>
+
+</Defs>

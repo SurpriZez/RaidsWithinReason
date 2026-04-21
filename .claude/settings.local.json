@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//e/Steam/steamapps/common/RimWorld/RimWorldWin64_Data/**)",
+      "Read(//c/Program Files \\(x86\\)/Steam/steamapps/common/RimWorld/RimWorldWin64_Data/**)",
+      "Bash(dotnet build *)",
+      "Read(//e/Installs/Steam/steamapps/common/RimWorld/**)"
+    ]
+  },
+  "enabledPlugins": {
+    "caveman@caveman": true
+  }
+}

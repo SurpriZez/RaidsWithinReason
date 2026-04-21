@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "btg0ux3MIl4=",
+  "success": true,
+  "projectFilePath": "E:\\Installs\\Steam\\steamapps\\common\\RimWorld\\Mods\\RaidsWithinReason\\Source\\RaidsWithinReason.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Levi\\.nuget\\packages\\krafs.rimworld.ref\\1.6.4633\\krafs.rimworld.ref.1.6.4633.nupkg.sha512",
+    "C:\\Users\\Levi\\.nuget\\packages\\lib.harmony\\2.4.2\\lib.harmony.2.4.2.nupkg.sha512",
+    "C:\\Users\\Levi\\.nuget\\packages\\microsoft.netframework.referenceassemblies\\1.0.3\\microsoft.netframework.referenceassemblies.1.0.3.nupkg.sha512",
+    "C:\\Users\\Levi\\.nuget\\packages\\microsoft.netframework.referenceassemblies.net472\\1.0.3\\microsoft.netframework.referenceassemblies.net472.1.0.3.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <RaidsWithinReason.RaidGoalDef>
+    <defName>RaidGoal_Loot</defName>
+    <label>loot</label>
+    <goalType>Loot</goalType>
+    <targetDescription>steal silver and other valuables</targetDescription>
+    <successGoodwillDelta>5</successGoodwillDelta>
+    <failureGoodwillDelta>-3</failureGoodwillDelta>
+    <retreatOnSuccess>true</retreatOnSuccess>
+  </RaidsWithinReason.RaidGoalDef>
+
+  <RaidsWithinReason.RaidGoalDef>
+    <defName>RaidGoal_Capture</defName>
+    <label>capture</label>
+    <goalType>Capture</goalType>
+    <targetDescription>take a colonist prisoner</targetDescription>
+    <successGoodwillDelta>0</successGoodwillDelta>
+    <failureGoodwillDelta>-5</failureGoodwillDelta>
+    <retreatOnSuccess>true</retreatOnSuccess>
+  </RaidsWithinReason.RaidGoalDef>
+
+  <RaidsWithinReason.RaidGoalDef>
+    <defName>RaidGoal_Destroy</defName>
+    <label>destroy</label>
+    <goalType>Destroy</goalType>
+    <targetDescription>demolish the colony's finest bedroom</targetDescription>
+    <successGoodwillDelta>-2</successGoodwillDelta>
+    <failureGoodwillDelta>-8</failureGoodwillDelta>
+    <retreatOnSuccess>false</retreatOnSuccess>
+  </RaidsWithinReason.RaidGoalDef>
+
+  <RaidsWithinReason.RaidGoalDef>
+    <defName>RaidGoal_Revenge</defName>
+    <label>revenge</label>
+    <goalType>Revenge</goalType>
+    <targetDescription>kill the colony's best fighter in retaliation</targetDescription>
+    <successGoodwillDelta>-10</successGoodwillDelta>
+    <failureGoodwillDelta>-15</failureGoodwillDelta>
+    <retreatOnSuccess>true</retreatOnSuccess>
+  </RaidsWithinReason.RaidGoalDef>
+
+</Defs>

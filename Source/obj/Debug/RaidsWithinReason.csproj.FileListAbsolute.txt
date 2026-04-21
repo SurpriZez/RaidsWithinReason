@@ -1,0 +1,16 @@
+E:\RimworldModding\RaidsWithinReason\Source\obj\Debug\RaidsWithinReason.csproj.AssemblyReference.cache
+E:\RimworldModding\RaidsWithinReason\Source\obj\Debug\RaidsWithinReason.GeneratedMSBuildEditorConfig.editorconfig
+E:\RimworldModding\RaidsWithinReason\Source\obj\Debug\RaidsWithinReason.AssemblyInfoInputs.cache
+E:\RimworldModding\RaidsWithinReason\Source\obj\Debug\RaidsWithinReason.AssemblyInfo.cs
+E:\RimworldModding\RaidsWithinReason\Source\obj\Debug\RaidsWithinReason.csproj.CoreCompileInputs.cache
+E:\RimworldModding\RaidsWithinReason\1.6\Assemblies\RaidsWithinReason.dll
+E:\RimworldModding\RaidsWithinReason\1.6\Assemblies\RaidsWithinReason.pdb
+E:\RimworldModding\RaidsWithinReason\Source\obj\Debug\RaidsWithinReason.dll
+E:\RimworldModding\RaidsWithinReason\Source\obj\Debug\RaidsWithinReason.pdb
+E:\Installs\Steam\steamapps\common\RimWorld\Mods\RaidsWithinReason\1.6\Assemblies\RaidsWithinReason.dll
+E:\Installs\Steam\steamapps\common\RimWorld\Mods\RaidsWithinReason\Source\obj\Debug\RaidsWithinReason.csproj.AssemblyReference.cache
+E:\Installs\Steam\steamapps\common\RimWorld\Mods\RaidsWithinReason\Source\obj\Debug\RaidsWithinReason.GeneratedMSBuildEditorConfig.editorconfig
+E:\Installs\Steam\steamapps\common\RimWorld\Mods\RaidsWithinReason\Source\obj\Debug\RaidsWithinReason.AssemblyInfoInputs.cache
+E:\Installs\Steam\steamapps\common\RimWorld\Mods\RaidsWithinReason\Source\obj\Debug\RaidsWithinReason.AssemblyInfo.cs
+E:\Installs\Steam\steamapps\common\RimWorld\Mods\RaidsWithinReason\Source\obj\Debug\RaidsWithinReason.csproj.CoreCompileInputs.cache
+E:\Installs\Steam\steamapps\common\RimWorld\Mods\RaidsWithinReason\Source\obj\Debug\RaidsWithinReason.dll
