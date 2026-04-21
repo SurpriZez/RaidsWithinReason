@@ -23,6 +23,34 @@ namespace RaidsWithinReason
                 Log.Warning("[RWR] Negotiator arrival failed to execute (no entry cell or no demand?).");
         }
 
+        [DebugAction("RaidsWithinReason", "Finish retaliation timer instantly", actionType = DebugActionType.Action, allowedGameStates = AllowedGameStates.PlayingOnMap)]
+        private static void FinishRetaliationTimer()
+        {
+            var quests = Find.QuestManager.QuestsListForReading;
+            bool any = false;
+            foreach (var quest in quests)
+            {
+                if (quest.State != QuestState.Ongoing) continue;
+                
+                // Identify retaliation quest: has a timer but no delivery requirement
+                bool isRetaliation = quest.PartsListForReading.Any(p => p is QuestPart_TimerExpiry) && 
+                                     !quest.PartsListForReading.Any(p => p is QuestPart_RequireDelivery);
+
+                if (isRetaliation)
+                {
+                    foreach (var part in quest.PartsListForReading)
+                    {
+                        if (part is QuestPart_TimerExpiry timer)
+                        {
+                            timer.expiryTick = Find.TickManager.TicksGame;
+                            any = true;
+                        }
+                    }
+                }
+            }
+            if (!any) Log.Warning("[RWR] No active retaliation timer quest found.");
+        }
+
         // ── Raids with specific goals ────────────────────────────────────────
 
         [DebugAction("RaidsWithinReason", "Force raid: Loot", actionType = DebugActionType.Action, allowedGameStates = AllowedGameStates.PlayingOnMap)]
@@ -113,9 +141,8 @@ namespace RaidsWithinReason
             Map map = Find.CurrentMap;
             float wealth        = ColonyStateReader.GetWealthScore(map);
             bool  hasPrisoner   = ColonyStateReader.HasValuablePrisoner(map);
-            float impressiveness = ColonyStateReader.GetMostBeautifulRoom(map)
-                                       ?.GetStat(RoomStatDefOf.Impressiveness) ?? 0f;
-            Log.Message($"[RWR] Colony state — wealthScore={wealth:F2}  hasPrisoner={hasPrisoner}  bestRoomImpressiveness={impressiveness:F1}");
+            bool  hasRooms      = ColonyStateReader.HasAnyRooms(map);
+            Log.Message($"[RWR] Colony state — wealthScore={wealth:F2}  hasPrisoner={hasPrisoner}  hasRooms={hasRooms}");
         }
 
         [DebugAction("RaidsWithinReason", "Log negotiator cooldowns", actionType = DebugActionType.Action, allowedGameStates = AllowedGameStates.PlayingOnMap)]

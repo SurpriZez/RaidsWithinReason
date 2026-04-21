@@ -7,8 +7,6 @@ namespace RaidsWithinReason
     {
         Goods,
         Pawn,
-        Goodwill,
-        Silver,
     }
 
     public class NegotiationDemandDef : Def

@@ -13,7 +13,7 @@
 
   <!-- LetterDefs for custom ChoiceLetter subclasses -->
   <Verse.LetterDef>
-    <defName>RWR_NegotiatorArrival</defName>
+    <defName>RWR_Letter_NegotiatorArrival</defName>
     <label>negotiator arrival</label>
     <letterClass>RaidsWithinReason.ChoiceLetter_NegotiatorArrival</letterClass>
   </Verse.LetterDef>

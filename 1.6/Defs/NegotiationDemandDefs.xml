@@ -12,16 +12,6 @@
   </RaidsWithinReason.NegotiationDemandDef>
 
   <RaidsWithinReason.NegotiationDemandDef>
-    <defName>Demand_Silver</defName>
-    <label>silver demand</label>
-    <demandType>Silver</demandType>
-    <thingDef>Silver</thingDef>
-    <baseAmount>800</baseAmount>
-    <timeLimitDays>3</timeLimitDays>
-    <linkedGoalType>Loot</linkedGoalType>
-  </RaidsWithinReason.NegotiationDemandDef>
-
-  <RaidsWithinReason.NegotiationDemandDef>
     <defName>Demand_ReleasePrisoner</defName>
     <label>prisoner release demand</label>
     <demandType>Pawn</demandType>
@@ -30,13 +20,5 @@
     <linkedGoalType>Capture</linkedGoalType>
   </RaidsWithinReason.NegotiationDemandDef>
 
-  <RaidsWithinReason.NegotiationDemandDef>
-    <defName>Demand_Tribute</defName>
-    <label>tribute demand</label>
-    <demandType>Goodwill</demandType>
-    <baseAmount>300</baseAmount>
-    <timeLimitDays>4</timeLimitDays>
-    <linkedGoalType>Revenge</linkedGoalType>
-  </RaidsWithinReason.NegotiationDemandDef>
 
 </Defs>

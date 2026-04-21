@@ -96,9 +96,13 @@ namespace RaidsWithinReason
 
         // ── save / load ──────────────────────────────────────────────────
 
+        private List<Lord>        _goalKeys;
+        private List<RaidGoalDef> _goalValues;
+        private List<Lord>        _succeededList;
+
         public override void ExposeData()
         {
-            Scribe_Collections.Look(ref goals,     "goals",     LookMode.Reference, LookMode.Def);
+            Scribe_Collections.Look(ref goals,     "goals",     LookMode.Reference, LookMode.Def, ref _goalKeys, ref _goalValues);
             Scribe_Collections.Look(ref succeeded, "succeeded", LookMode.Reference);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)

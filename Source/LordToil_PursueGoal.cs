@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using RimWorld;
 using Verse;
@@ -10,10 +11,10 @@ namespace RaidsWithinReason
     {
         private readonly RaidGoalDef goal;
 
-        private Thing   targetThing;
         private Pawn    targetPawn;
         private IntVec3 targetCell;
         private Pawn    designatedKidnapper; // only this raider gets DutyDefOf.Kidnap
+        private bool    hasBeenResisted; // tracks if the raid was attacked during loot
 
         public LordToil_PursueGoal(RaidGoalDef goal)
         {
@@ -30,9 +31,24 @@ namespace RaidsWithinReason
 
         public override void LordToilTick()
         {
-            if ((goal.goalType == RaidGoalType.Capture || goal.goalType == RaidGoalType.Revenge) &&
-                Find.TickManager.TicksGame % 60 == 0)
-                UpdateAllDuties();
+            if (Find.TickManager.TicksGame % 60 == 0)
+            {
+                if (goal.goalType == RaidGoalType.Loot)
+                {
+                    if (!hasBeenResisted && CheckIfResisted())
+                    {
+                        hasBeenResisted = true;
+                    }
+                    UpdateAllDuties();
+                }
+                else if (goal.goalType == RaidGoalType.Capture || goal.goalType == RaidGoalType.Revenge || goal.goalType == RaidGoalType.ReleasePrisoner)
+                {
+                    if (goal.goalType == RaidGoalType.ReleasePrisoner && Map != null)
+                        CheckForRescue(Map);
+
+                    UpdateAllDuties();
+                }
+            }
         }
 
         public override void UpdateAllDuties()
@@ -47,12 +63,12 @@ namespace RaidsWithinReason
                     pawn.mindState.duty = newDuty;
                 }
 
-                if (goal.goalType == RaidGoalType.Revenge)
-                    ForceRevengeAttack(pawn);
+                if (goal.goalType == RaidGoalType.Revenge || goal.goalType == RaidGoalType.Capture)
+                    ForcePursuitAttack(pawn);
             }
         }
 
-        private void ForceRevengeAttack(Pawn raider)
+        private void ForcePursuitAttack(Pawn raider)
         {
             if (targetPawn == null || targetPawn.Dead || targetPawn.Destroyed) return;
             if (raider.Dead || raider.Downed || !raider.Spawned) return;
@@ -64,20 +80,23 @@ namespace RaidsWithinReason
 
             if (targetPawn.Downed)
             {
-                if (raider.CurJob?.targetA.Thing != targetPawn)
+                if (goal.goalType == RaidGoalType.Revenge)
                 {
-                    Job job = JobMaker.MakeJob(JobDefOf.AttackMelee, targetPawn);
-                    job.killIncappedTarget = true;
-                    raider.jobs.StartJob(
-                        job,
-                        JobCondition.InterruptForced,
-                        canReturnCurJobToPool: false);
+                    if (raider.CurJob?.targetA.Thing != targetPawn)
+                    {
+                        Job job = JobMaker.MakeJob(JobDefOf.AttackMelee, targetPawn);
+                        job.killIncappedTarget = true;
+                        raider.jobs.StartJob(
+                            job,
+                            JobCondition.InterruptForced,
+                            canReturnCurJobToPool: false);
+                    }
                 }
             }
             else if (!isRanged)
             {
                 // Melee raider vs alive target: force approach and attack.
-                if (raider.CurJob?.targetA.Thing != targetPawn)
+                if (raider.CurJob?.targetA.Thing != targetPawn && raider.CurJob?.def != JobDefOf.Kidnap)
                     raider.jobs.StartJob(
                         JobMaker.MakeJob(JobDefOf.AttackMelee, targetPawn),
                         JobCondition.InterruptForced,
@@ -117,19 +136,16 @@ namespace RaidsWithinReason
             switch (goal.goalType)
             {
                 case RaidGoalType.Loot:
-                    targetThing = BestStockpileItem(map);
-                    targetCell  = targetThing?.Position ?? IntVec3.Invalid;
+                    // No central target for Loot; DutyDefOf.Steal handles individual item selection per pawn.
                     break;
 
                 case RaidGoalType.Capture:
                 {
                     Pawn current = tracker?.GetTargetPawn(lord);
-                    // Lock onto the downed target so we don't drop them and chase someone else.
-                    bool keepCurrent = current != null && !current.Dead && !current.Destroyed
-                                       && current.Downed;
-                    targetPawn = keepCurrent
+                    // Lock onto the initial target; never switch to a new colonist.
+                    targetPawn = (current != null && !current.Dead && !current.Destroyed)
                         ? current
-                        : ColonyStateReader.GetStrongestColonist(map);
+                        : ColonyStateReader.GetRandomNotableColonist(map);
                     targetCell = targetPawn?.Position ?? IntVec3.Invalid;
                     tracker?.SetTargetPawn(lord, targetPawn);
 
@@ -148,7 +164,7 @@ namespace RaidsWithinReason
 
                 case RaidGoalType.Destroy:
                 {
-                    Room room  = ColonyStateReader.GetMostBeautifulRoom(map);
+                    Room room  = ColonyStateReader.GetRandomRoomByPurpose(map);
                     Building b = room != null ? FindPrimaryBuilding(room, map) : null;
                     targetCell = b?.Position ?? (room != null ? room.Cells.RandomElement() : IntVec3.Invalid);
                     tracker?.SetTargetBuilding(lord, b);
@@ -167,8 +183,27 @@ namespace RaidsWithinReason
                     // Lock onto the initial target; never switch to a new colonist.
                     targetPawn = (current != null && !current.Destroyed)
                         ? current
-                        : ColonyStateReader.GetStrongestColonist(map);
+                        : ColonyStateReader.GetRandomNotableColonist(map);
                     targetCell = targetPawn?.Position ?? IntVec3.Invalid;
+                    tracker?.SetTargetPawn(lord, targetPawn);
+                    break;
+                }
+
+                case RaidGoalType.ReleasePrisoner:
+                {
+                    Pawn current = tracker?.GetTargetPawn(lord);
+                    // Use the pending target if we just started, otherwise stay locked on.
+                    targetPawn = (current != null && current.IsPrisonerOfColony) 
+                        ? current 
+                        : Patch_IncidentWorker_Raid_TryExecuteWorker._pendingTarget;
+
+                    if (targetPawn == null || !targetPawn.IsPrisonerOfColony)
+                    {
+                        // Mission accomplished or target lost
+                        tracker?.MarkSuccess(lord);
+                        return;
+                    }
+                    targetCell = targetPawn.Position;
                     tracker?.SetTargetPawn(lord, targetPawn);
                     break;
                 }
@@ -180,8 +215,27 @@ namespace RaidsWithinReason
             switch (goal.goalType)
             {
                 case RaidGoalType.Loot:
-                    if (targetThing != null && !targetThing.Destroyed)
-                        return new PawnDuty(DutyDefOf.Steal, targetThing);
+                    if (hasBeenResisted)
+                        return new PawnDuty(DutyDefOf.AssaultColony);
+
+                    Thing item = FindLootFor(pawn);
+                    if (item != null)
+                    {
+                        // Native Steal AI handles picking unique items and leaving. 
+                        // But if triggered from >120 cells away, it returns null and abandons the map instantly!
+                        // We MUST bring them close first.
+                        if (pawn.CanReserveAndReach(item, PathEndMode.ClosestTouch, Danger.Some))
+                        {
+                            if (pawn.Position.DistanceToSquared(item.Position) > 900) // ~30 cells
+                                return new PawnDuty(DutyDefOf.Defend, item.Position, 8f);
+
+                            return new PawnDuty(DutyDefOf.Steal); 
+                        }
+                        
+                        // Blocked by doors or heavily guarded? Bash our way in!
+                        return new PawnDuty(DutyDefOf.AssaultColony, item.Position);
+                    }
+                    
                     return new PawnDuty(DutyDefOf.AssaultColony);
 
                 case RaidGoalType.Capture:
@@ -219,6 +273,11 @@ namespace RaidsWithinReason
                     // Focus all raiders on the target directly, including when downed.
                     return new PawnDuty(DutyDefOf.AssaultColony, targetPawn);
 
+                case RaidGoalType.ReleasePrisoner:
+                    if (targetPawn == null || !targetPawn.IsPrisonerOfColony)
+                        return new PawnDuty(DutyDefOf.AssaultColony);
+                    return new PawnDuty(DutyDefOf.AssaultColony, targetPawn);
+
                 default:
                     return new PawnDuty(DutyDefOf.AssaultColony);
             }
@@ -243,20 +302,76 @@ namespace RaidsWithinReason
             return best;
         }
 
-        private static Thing BestStockpileItem(Map map)
+        private Thing FindLootFor(Pawn p)
         {
-            Thing best      = null;
+            Thing best = null;
             float bestValue = 0f;
-            foreach (Zone zone in map.zoneManager.AllZones)
+
+            foreach (Zone zone in p.Map.zoneManager.AllZones)
             {
-                if (!(zone is Zone_Stockpile stockpile)) continue;
-                foreach (Thing t in stockpile.AllContainedThings)
+                if (zone is Zone_Stockpile stockpile)
                 {
-                    float v = t.MarketValue * t.stackCount;
-                    if (v > bestValue) { bestValue = v; best = t; }
+                    foreach (Thing t in stockpile.AllContainedThings)
+                    {
+                        float v = t.MarketValue * t.stackCount;
+                        if (v > bestValue) { bestValue = v; best = t; }
+                    }
                 }
             }
+
+            foreach (Building b in p.Map.listerBuildings.allBuildingsColonist)
+            {
+                if (b is Building_Storage storage && storage.slotGroup != null)
+                {
+                    foreach (Thing t in storage.slotGroup.HeldThings)
+                    {
+                        float v = t.MarketValue * t.stackCount;
+                        if (v > bestValue) { bestValue = v; best = t; }
+                    }
+                }
+            }
+
             return best;
+        }
+
+        private bool CheckIfResisted()
+        {
+            foreach (Pawn raider in lord.ownedPawns)
+            {
+                if (raider.Dead || raider.Downed) return true;
+                
+                // If they are bleeding, they likely just got shot or cut
+                if (raider.health.hediffSet.BleedRateTotal > 0.001f) return true;
+
+                if (IsUnderMeleeAttack(raider)) return true;
+                
+                // If they have acquired an enemy target, they are in combat
+                if (raider.mindState.enemyTarget != null) return true;
+            }
+            return false;
+        }
+        private void CheckForRescue(Map map)
+        {
+            if (targetPawn == null || !targetPawn.IsPrisonerOfColony) return;
+
+            foreach (Pawn raider in lord.ownedPawns)
+            {
+                if (!raider.Dead && !raider.Downed && raider.Position.AdjacentTo8WayOrInside(targetPawn))
+                {
+                    // Free them using the native system!
+                    GenGuest.PrisonerRelease(targetPawn);
+                    targetPawn.SetFaction(raider.Faction);
+                    
+                    // Rescued pawn should leave
+                    Lord rescueLord = LordMaker.MakeNewLord(raider.Faction, new LordJob_ExitMapNear(), map);
+                    rescueLord.AddPawn(targetPawn);
+
+                    Messages.Message($"{targetPawn.LabelShort} has been freed by {raider.Faction.Name} raiders!", targetPawn, MessageTypeDefOf.NegativeEvent);
+                    
+                    map.GetComponent<RaidGoalTracker>()?.MarkSuccess(lord);
+                    break;
+                }
+            }
         }
     }
 }

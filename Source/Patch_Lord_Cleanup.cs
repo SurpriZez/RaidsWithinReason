@@ -98,9 +98,9 @@ namespace RaidsWithinReason
                 ? $"{outcome}\n\n{goodwillLine}"
                 : outcome;
 
-            LetterDef letterDef = deltaRounded >= 0
-                ? LetterDefOf.NeutralEvent
-                : LetterDefOf.NegativeEvent;
+            LetterDef letterDef = succeeded
+                ? LetterDefOf.NegativeEvent
+                : LetterDefOf.PositiveEvent;
 
             Find.LetterStack.ReceiveLetter(title, body, letterDef,
                 new LookTargets(map.Parent));

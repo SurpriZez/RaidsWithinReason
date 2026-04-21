@@ -26,12 +26,19 @@ namespace RaidsWithinReason
             Faction faction = parms.faction ?? Find.FactionManager.RandomEnemyFaction(allowHidden: false, allowDefeated: false, allowNonHumanlike: false);
             if (faction == null) { Log.Warning("[RWR] No valid humanlike enemy faction found."); return false; }
 
-            NegotiationDemandDef demand = SelectDemand(faction, map);
-            if (demand == null) { Log.Warning($"[RWR] SelectDemand returned null. NegotiationDemandDef count: {DefDatabase<NegotiationDemandDef>.DefCount}"); return false; }
+            NegotiationRequest request = SelectRequest(faction, map);
+            if (request == null) { Log.Warning($"[RWR] SelectRequest returned null."); return false; }
 
-            float wealthScore   = ColonyStateReader.GetWealthScore(map);
-            float scale         = wealthScore < 0.33f ? 0.5f : wealthScore < 0.67f ? 1f : 1.5f;
-            int   scaledAmount  = Mathf.RoundToInt(demand.baseAmount * scale);
+            // Calculate amount based on Market Value and Wealth
+            if (request.template.demandType == NegotiationDemandType.Goods)
+            {
+                float targetValue = 500f + (map.wealthWatcher.WealthTotal * 0.01f); // 1% of wealth + 500 base
+                request.amount = Mathf.Max(1, Mathf.RoundToInt(targetValue / request.thingDef.BaseMarketValue));
+            }
+            else
+            {
+                request.amount = request.template.baseAmount;
+            }
 
             if (!RCellFinder.TryFindRandomPawnEntryCell(out IntVec3 spawnCell, map, 0.5f))
             { Log.Warning("[RWR] TryFindRandomPawnEntryCell failed."); return false; }
@@ -50,22 +57,17 @@ namespace RaidsWithinReason
             }
 
             Lord lord = LordMaker.MakeNewLord(faction,
-                new LordJob_NegotiatorVisit(spawnCell, GenDate.TicksPerDay, demand), map);
+                new LordJob_NegotiatorVisit(spawnCell, GenDate.TicksPerDay, request), map);
             foreach (Pawn p in allPawns) lord.AddPawn(p);
 
-            var letter = new ChoiceLetter_NegotiatorArrival
-            {
-                def            = DefDatabase<LetterDef>.GetNamed("RWR_NegotiatorArrival"),
-                Label          = "Negotiator Arrives",
-                Text           = BuildLetterText(faction, demand, scaledAmount),
-                lookTargets    = new LookTargets(negotiator),
-                relatedFaction = faction,
-                negotiator     = negotiator,
-                demand         = demand,
-                scaledAmount   = scaledAmount,
-                negotiatorLord = lord,
-                incidentMap    = map,
-            };
+            var letter = (ChoiceLetter_NegotiatorArrival)LetterMaker.MakeLetter("Negotiator Arrives", BuildLetterText(faction, request), DefDatabase<LetterDef>.GetNamed("RWR_Letter_NegotiatorArrival"));
+            letter.lookTargets    = new LookTargets(negotiator);
+            letter.relatedFaction = faction;
+            letter.negotiator     = negotiator;
+            letter.request        = request;
+            letter.negotiatorLord = lord;
+            letter.incidentMap    = map;
+
             Find.LetterStack.ReceiveLetter(letter);
             return true;
         }
@@ -119,43 +121,72 @@ namespace RaidsWithinReason
             kind.RaceProps?.Humanlike == true &&
             !kind.RaceProps.lifeStageAges.NullOrEmpty();
 
-        private static NegotiationDemandDef SelectDemand(Faction faction, Map map)
+        private static NegotiationRequest SelectRequest(Faction faction, Map map)
         {
             float wealthScore        = ColonyStateReader.GetWealthScore(map);
             bool  hasPrisoner        = ColonyStateReader.HasValuablePrisoner(map);
-            float roomImpressiveness = ColonyStateReader.GetMostBeautifulRoom(map)
-                                           ?.GetStat(RoomStatDefOf.Impressiveness) ?? 0f;
+            bool  hasRooms           = ColonyStateReader.HasAnyRooms(map);
             bool  recentlyAttacked   = ColonyStateReader.RecentlyAttackedFaction(faction, map);
 
-            return DefDatabase<NegotiationDemandDef>.AllDefsListForReading
-                .Where(d => d.demandType != NegotiationDemandType.Pawn || hasPrisoner)
-                .MaxByWithFallback(d => d.linkedGoalType switch
+            // 1. Pick a template
+            var template = DefDatabase<NegotiationDemandDef>.AllDefsListForReading
+                .InRandomOrder()
+                .Where(t => 
+                    (t.demandType != NegotiationDemandType.Pawn || hasPrisoner) &&
+                    (t.linkedGoalType != RaidGoalType.Destroy || hasRooms)
+                )
+                .MaxByWithFallback(t => 
                 {
-                    RaidGoalType.Loot    => wealthScore,
-                    RaidGoalType.Capture => hasPrisoner ? 0.8f : 0.2f,
-                    RaidGoalType.Destroy => roomImpressiveness > 10f ? 0.6f : 0.1f,
-                    RaidGoalType.Revenge => recentlyAttacked ? 0.9f : 0.05f,
-                    _                    => 0f,
+                    float score = t.linkedGoalType switch
+                    {
+                        RaidGoalType.Loot    => wealthScore,
+                        RaidGoalType.Capture => hasPrisoner ? 0.8f : 0.0f,
+                        RaidGoalType.Destroy => hasRooms ? 0.6f : 0.0f,
+                        RaidGoalType.Revenge => recentlyAttacked ? 0.9f : 0.05f,
+                        _                    => 0.01f,
+                    };
+                    return score + Rand.Value * 0.1f;
                 });
+
+            if (template == null) return null;
+
+            // 2. Select specific ThingDef or Pawn if needed
+            ThingDef targetDef  = template.thingDef;
+            Pawn     targetPawn = null;
+
+            if (template.demandType == NegotiationDemandType.Goods)
+            {
+                var candidates = ColonyStateReader.GetDynamicLootCandidates(map);
+                if (candidates.Any())
+                {
+                    targetDef = candidates.RandomElementByWeight(c => ColonyStateReader.GetStockedAmount(map, c) * c.BaseMarketValue);
+                }
+            }
+            else if (template.demandType == NegotiationDemandType.Pawn)
+            {
+                targetPawn = map.mapPawns.PrisonersOfColony.RandomElementWithFallback();
+            }
+
+            var request = new NegotiationRequest(template, targetDef, template.baseAmount);
+            request.targetPawn = targetPawn;
+            return request;
         }
 
-        private static string BuildLetterText(Faction faction, NegotiationDemandDef demand, int scaledAmount)
+        private static string BuildLetterText(Faction faction, NegotiationRequest request)
         {
-            string thing = demand.thingDef?.label ?? "silver";
             return $"A negotiator from {faction.Name} has arrived at your colony's border.\n\n" +
-                   $"Their demand: {demand.targetDescription} ({scaledAmount} {thing}).\n\n" +
-                   $"You have {demand.timeLimitDays} days to comply. Refusing or ignoring them " +
+                   $"Their demand: {request.template.targetDescription} ({request.TargetDescription}).\n\n" +
+                   $"You have {request.template.timeLimitDays} days to comply. Refusing or ignoring them " +
                    $"will provoke a retaliatory raid within 1\u20134 days.";
         }
     }
 
     public class ChoiceLetter_NegotiatorArrival : ChoiceLetter
     {
-        public Pawn                 negotiator;
-        public NegotiationDemandDef demand;
-        public int                  scaledAmount;
-        public Lord                 negotiatorLord;
-        public Map                  incidentMap;
+        public Pawn               negotiator;
+        public NegotiationRequest request;
+        public Lord               negotiatorLord;
+        public Map                incidentMap;
 
         public override IEnumerable<DiaOption> Choices
         {
@@ -173,27 +204,74 @@ namespace RaidsWithinReason
             opt.resolveTree = true;
             opt.action = () =>
             {
-                string thingLabel = demand?.thingDef?.label ?? "silver";
-                string confirmText =
-                    $"Deliver {scaledAmount} {thingLabel} to {relatedFaction?.Name}?\n\n" +
-                    "A compliance timer will begin. Failure to deliver will still trigger a raid.";
-
-                Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(confirmText, () =>
+                string thingLabel = request.thingDef?.label ?? "silver";
+                
+                if (request.template.demandType == NegotiationDemandType.Goods)
                 {
-                    Slate slate = new Slate();
-                    slate.Set("demand",       demand);
-                    slate.Set("scaledAmount", scaledAmount);
-                    slate.Set("faction",      relatedFaction);
-                    slate.Set("map",          incidentMap);
+                    int available = ColonyStateReader.GetStockedAmount(incidentMap, request.thingDef);
+                    if (available < request.amount)
+                    {
+                        string failText = $"You no longer have enough {thingLabel} to fulfill this demand. (Required: {request.amount}, Available: {available})";
+                        Find.WindowStack.Add(new Dialog_MessageBox(failText));
+                        return;
+                    }
 
-                    Quest quest = QuestGen.Generate(
-                        DefDatabase<QuestScriptDef>.GetNamed("RWR_NegotiatorDemand"), slate);
-                    Find.QuestManager.Add(quest);
-                    quest.Accept(null);
+                    string confirmText = $"Instantly deliver {request.amount} {thingLabel} from your stockpiles to {relatedFaction?.Name}?";
+                    Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(confirmText, () =>
+                    {
+                        int taken = NegotiatorUtil.ConsumeResources(incidentMap, request.thingDef, request.amount);
+                        if (taken >= request.amount)
+                        {
+                            Messages.Message($"Successfully delivered {request.amount} {thingLabel} to the negotiator. They are departing peacefully.", MessageTypeDefOf.PositiveEvent);
+                            negotiatorLord?.ReceiveMemo("NegotiatorDismissed");
+                            Find.LetterStack.RemoveLetter(this);
+                        }
+                        else
+                        {
+                            Messages.Message($"Internal error: Could only find {taken} {thingLabel} during consumption.", MessageTypeDefOf.RejectInput);
+                        }
+                    }));
+                }
+                else if (request.template.demandType == NegotiationDemandType.Pawn)
+                {
+                    Pawn prisoner = request.targetPawn;
+                    if (prisoner == null || prisoner.Dead || prisoner.Destroyed || !prisoner.IsPrisonerOfColony)
+                    {
+                        Find.WindowStack.Add(new Dialog_MessageBox("The required prisoner is no longer available. You must refuse or ignore the demand."));
+                        return;
+                    }
 
-                    negotiatorLord?.ReceiveMemo("NegotiatorAccepted");
-                    Find.LetterStack.RemoveLetter(this);
-                }));
+                    string confirmText = $"Instantly hand over {prisoner.LabelShort} and release them to {relatedFaction?.Name}?";
+                    Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(confirmText, () =>
+                    {
+                        if (NegotiatorUtil.HandoverPrisoner(prisoner, negotiator, incidentMap))
+                        {
+                            negotiatorLord?.ReceiveMemo("NegotiatorDismissed");
+                            Find.LetterStack.RemoveLetter(this);
+                        }
+                    }));
+                }
+                else
+                {
+                    string confirmText =
+                        $"Deliver {request.TargetDescription} to {relatedFaction?.Name}?\n\n" +
+                        "A compliance timer will begin. Failure to deliver will still trigger a raid.";
+
+                    Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(confirmText, () =>
+                    {
+                        Slate slate = new Slate();
+                        slate.Set("request",      request);
+                        slate.Set("faction",      relatedFaction);
+                        slate.Set("map",          incidentMap);
+
+                        Quest quest = QuestGen.Generate(DefDatabase<QuestScriptDef>.GetNamed("RWR_NegotiatorDemand"), slate);
+                        Find.QuestManager.Add(quest);
+                        quest.Accept(null);
+
+                        negotiatorLord?.ReceiveMemo("NegotiatorAccepted");
+                        Find.LetterStack.RemoveLetter(this);
+                    }));
+                }
             };
             return opt;
         }
@@ -204,9 +282,14 @@ namespace RaidsWithinReason
             opt.resolveTree = true;
             opt.action = () =>
             {
-                ScheduleRaid();
+                RaidGoalDef goal = DefDatabase<RaidGoalDef>.GetNamedSilentFail($"RaidGoal_{request.template.linkedGoalType}");
+                NegotiatorUtil.ScheduleRetaliation(relatedFaction, incidentMap, goal);
                 negotiatorLord?.ReceiveMemo("NegotiatorDismissed");
                 Find.LetterStack.RemoveLetter(this);
+                Find.LetterStack.ReceiveLetter(
+                    $"You refused the demand",
+                    $"The negotiator from {relatedFaction?.Name} has left, but they will return.",
+                    LetterDefOf.NegativeEvent);
             };
             return opt;
         }
@@ -217,33 +300,24 @@ namespace RaidsWithinReason
             opt.resolveTree = true;
             opt.action = () =>
             {
-                ScheduleRaid();
                 Find.LetterStack.RemoveLetter(this);
-                // Negotiator departs after 24 h via LordJob_NegotiatorVisit timeout
             };
             return opt;
-        }
-
-        private void ScheduleRaid()
-        {
-            IncidentDef   raidDef   = IncidentDefOf.RaidEnemy;
-            IncidentParms raidParms = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatBig, incidentMap);
-            raidParms.faction       = relatedFaction;
-            int delayTicks          = Rand.Range(GenDate.TicksPerDay, 4 * GenDate.TicksPerDay);
-            Find.Storyteller.incidentQueue.Add(
-                raidDef,
-                Find.TickManager.TicksGame + delayTicks,
-                raidParms);
         }
 
         public override void ExposeData()
         {
             base.ExposeData();
             Scribe_References.Look(ref negotiator,     "negotiator");
-            Scribe_Defs.Look(ref demand,               "demand");
-            Scribe_Values.Look(ref scaledAmount,       "scaledAmount");
+            Scribe_Deep.Look(ref request,               "request");
             Scribe_References.Look(ref negotiatorLord, "negotiatorLord");
             Scribe_References.Look(ref incidentMap,    "incidentMap");
+            
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                // Ensure request container exists even if scribe fails
+                request ??= new NegotiationRequest();
+            }
         }
     }
 }

@@ -12,8 +12,7 @@ namespace RaidsWithinReason
     // Sends outSignalSuccess when the condition is met.
     public class QuestPart_RequireDelivery : QuestPart
     {
-        public NegotiationDemandDef demand;
-        public int                  requiredAmount;
+        public NegotiationRequest request;
         public RWR_DeliveryPoint    deliveryPoint;
         public Pawn                 requiredPrisoner;
         public string               outSignalSuccess;
@@ -25,7 +24,7 @@ namespace RaidsWithinReason
             if (completed || quest.State != QuestState.Ongoing) return;
             if (Find.TickManager.TicksGame % 300 != 0) return;
 
-            if (demand.demandType == NegotiationDemandType.Pawn)
+            if (request?.template?.demandType == NegotiationDemandType.Pawn)
                 CheckPrisonerRelease();
             else
                 CheckCaravanDelivery();
@@ -56,15 +55,15 @@ namespace RaidsWithinReason
 
         private bool TryConsumeFromCaravan(Caravan caravan)
         {
-            ThingDef target = demand.thingDef ?? ThingDefOf.Silver;
+            ThingDef target = request.thingDef;
             int total = caravan.PawnsListForReading
                 .SelectMany(p => p.inventory.innerContainer)
                 .Where(t => t.def == target)
                 .Sum(t => t.stackCount);
 
-            if (total < requiredAmount) return false;
+            if (total < request.amount) return false;
 
-            int remaining = requiredAmount;
+            int remaining = request.amount;
             foreach (Pawn pawn in caravan.PawnsListForReading)
             {
                 foreach (Thing thing in pawn.inventory.innerContainer
@@ -103,9 +102,9 @@ namespace RaidsWithinReason
             get
             {
                 if (completed) return null;
-                if (demand?.demandType == NegotiationDemandType.Pawn)
+                if (request?.template?.demandType == NegotiationDemandType.Pawn)
                     return $"Release prisoner: {requiredPrisoner?.LabelShort ?? "demanded prisoner"}";
-                return $"Deliver {requiredAmount}× {demand?.thingDef?.label ?? "silver"} to the delivery point";
+                return $"Deliver {request?.TargetDescription} to the negotiator";
             }
         }
 
@@ -119,8 +118,7 @@ namespace RaidsWithinReason
         public override void ExposeData()
         {
             base.ExposeData();
-            Scribe_Defs.Look(ref demand,              "demand");
-            Scribe_Values.Look(ref requiredAmount,    "requiredAmount");
+            Scribe_Deep.Look(ref request,             "request");
             Scribe_References.Look(ref deliveryPoint, "deliveryPoint");
             Scribe_References.Look(ref requiredPrisoner, "requiredPrisoner");
             Scribe_Values.Look(ref outSignalSuccess,  "outSignalSuccess");
@@ -161,7 +159,20 @@ namespace RaidsWithinReason
             IncidentDef   raidDef = IncidentDefOf.RaidEnemy;
             IncidentParms parms   = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatBig, map);
             parms.faction         = faction;
-            raidDef.Worker.TryExecute(parms);
+
+            Patch_IncidentWorker_Raid_TryExecuteWorker._skipInterception = true;
+            Patch_IncidentWorker_Raid_TryExecuteWorker._pendingGoal      = goalDef;
+            Patch_IncidentWorker_Raid_TryExecuteWorker._pendingFaction   = faction;
+            try
+            {
+                raidDef.Worker.TryExecute(parms);
+            }
+            finally
+            {
+                Patch_IncidentWorker_Raid_TryExecuteWorker._skipInterception = false;
+                Patch_IncidentWorker_Raid_TryExecuteWorker._pendingGoal      = null;
+                Patch_IncidentWorker_Raid_TryExecuteWorker._pendingFaction   = null;
+            }
 
             // Assign the forced goal to any lords that spawned from this raid
             if (goalDef != null)
@@ -174,7 +185,7 @@ namespace RaidsWithinReason
 
             Find.LetterStack.ReceiveLetter(
                 "Demand Expired",
-                $"Your failure to comply with the demands of {faction?.Name} has provoked an immediate raid.",
+                $"Your failure to comply with the demands of {faction?.Name} has provoked a raid.",
                 LetterDefOf.ThreatBig,
                 new LookTargets(map.Parent));
 

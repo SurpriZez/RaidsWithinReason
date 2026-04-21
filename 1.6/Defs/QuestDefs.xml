@@ -16,4 +16,10 @@
 <root Class="RaidsWithinReason.QuestNode_BuildNegotiationQuest" />
   </RimWorld.QuestScriptDef>
 
+  <RimWorld.QuestScriptDef>
+    <defName>RWR_RetaliationTimer</defName>
+    <rootSelectionWeight>0</rootSelectionWeight>
+    <root Class="RaidsWithinReason.QuestNode_BuildRetaliationQuest" />
+  </RimWorld.QuestScriptDef>
+
 </Defs>

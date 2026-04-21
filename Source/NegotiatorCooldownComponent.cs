@@ -25,10 +25,13 @@ namespace RaidsWithinReason
             lastNegotiatorTick[faction] = Find.TickManager.TicksGame;
         }
 
+        private List<Faction> _cooldownKeys;
+        private List<int>     _cooldownValues;
+
         public override void ExposeData()
         {
             Scribe_Collections.Look(ref lastNegotiatorTick, "lastNegotiatorTick",
-                LookMode.Reference, LookMode.Value);
+                LookMode.Reference, LookMode.Value, ref _cooldownKeys, ref _cooldownValues);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {

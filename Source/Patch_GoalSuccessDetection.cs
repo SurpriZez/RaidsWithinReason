@@ -149,7 +149,7 @@ namespace RaidsWithinReason
             Find.LetterStack.ReceiveLetter(
                 $"{faction} got what they came for",
                 body,
-                LetterDefOf.NeutralEvent,
+                LetterDefOf.NegativeEvent,
                 new LookTargets(map.Parent));
         }
     }

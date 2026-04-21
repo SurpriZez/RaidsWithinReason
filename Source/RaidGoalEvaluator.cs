@@ -12,15 +12,14 @@ namespace RaidsWithinReason
 
             float wealthScore        = ColonyStateReader.GetWealthScore(map);
             bool  hasPrisoner        = ColonyStateReader.HasValuablePrisoner(map);
-            float roomImpressiveness = ColonyStateReader.GetMostBeautifulRoom(map)
-                                           ?.GetStat(RoomStatDefOf.Impressiveness) ?? 0f;
+            bool  hasRooms           = ColonyStateReader.HasAnyRooms(map);
             bool  recentlyAttacked   = ColonyStateReader.RecentlyAttackedFaction(faction, map);
 
             return candidates.MaxByWithFallback(def => def.goalType switch
             {
                 RaidGoalType.Loot    => wealthScore,
                 RaidGoalType.Capture => hasPrisoner ? 0.8f : 0f,
-                RaidGoalType.Destroy => roomImpressiveness > 10f ? 0.6f : 0.1f,
+                RaidGoalType.Destroy => hasRooms ? 0.6f : 0f,
                 _                    => 0f, // Revenge is reactive only — never randomly assigned
             });
         }
