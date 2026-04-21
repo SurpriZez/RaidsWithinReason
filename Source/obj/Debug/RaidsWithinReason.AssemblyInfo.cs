@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RaidsWithinReason")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f349620494b788177e5a4ab6f96cc467698a1aea")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a09be1a42bed30b35c22ad070d5ec44a6c35bd33")]
 [assembly: System.Reflection.AssemblyProductAttribute("RaidsWithinReason")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RaidsWithinReason")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

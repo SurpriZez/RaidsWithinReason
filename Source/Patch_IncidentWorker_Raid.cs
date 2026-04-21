@@ -8,8 +8,8 @@ using Verse.AI.Group;
 
 namespace RaidsWithinReason
 {
-    [HarmonyPatch(typeof(IncidentWorker_Raid), "TryExecuteWorker")]
-    public static class Patch_IncidentWorker_Raid_TryExecuteWorker
+    [HarmonyPatch(typeof(IncidentWorker), nameof(IncidentWorker.TryExecute))]
+    public static class Patch_IncidentWorker_Raid_TryExecute
     {
         // Written by Prefix, read by Patch_LordMaker_MakeNewLord, cleared by Postfix.
         internal static RaidGoalDef _pendingGoal;
@@ -22,8 +22,10 @@ namespace RaidsWithinReason
         internal static Pawn        _pendingTarget;
 
         [HarmonyPrefix]
-        public static bool Prefix(IncidentParms parms)
+        public static bool Prefix(IncidentWorker __instance, IncidentParms parms, ref bool __result)
         {
+            if (!(__instance is IncidentWorker_Raid)) return true;
+
             // Goal already set or explicitly requested to skip mod interception.
             if (_debugForceGoal || _skipInterception) return true;
 
@@ -33,14 +35,17 @@ namespace RaidsWithinReason
             // Redirect qualifying raids to a negotiation attempt.
             if (ShouldIntercept(faction, map))
             {
-                IncidentDef negotiatorDef =
-                    DefDatabase<IncidentDef>.GetNamedSilentFail("RWR_NegotiatorArrival");
-
-                if (negotiatorDef?.Worker.TryExecute(parms) == true)
+                IncidentDef negotiatorDef = DefDatabase<IncidentDef>.GetNamedSilentFail("RWR_NegotiatorArrival");
+                if (negotiatorDef != null)
                 {
-                    Current.Game.GetComponent<NegotiatorCooldownComponent>()
-                           ?.RecordNegotiatorSent(faction);
-                    return false; // cancel the raid
+                    bool success = (bool)Traverse.Create(negotiatorDef.Worker).Method("TryExecuteWorker", parms).GetValue();
+                    if (success)
+                    {
+                        Current.Game.GetComponent<NegotiatorCooldownComponent>()
+                               ?.RecordNegotiatorSent(faction);
+                        __result = true;
+                        return false; // cancel the raid incident COMPLETELY (bypasses SendStandardLetter)
+                    }
                 }
                 // Negotiator failed to spawn — fall through to normal raid.
             }
@@ -143,7 +148,7 @@ namespace RaidsWithinReason
         {
             if (__result?.LordJob == null || map == null) return;
 
-            RaidGoalDef pending = Patch_IncidentWorker_Raid_TryExecuteWorker._pendingGoal;
+            RaidGoalDef pending = Patch_IncidentWorker_Raid_TryExecute._pendingGoal;
             
             // If spawned via certain debug actions or custom mods, the overarching
             // IncidentWorker may not have cached a pending goal. We generate a fallback here.
@@ -226,8 +231,8 @@ namespace RaidsWithinReason
             RaidGoalDef goal = null;
 
             // Fresh raid execution: pull from the pending goal cache
-            if (Patch_IncidentWorker_Raid_TryExecuteWorker._pendingGoal != null)
-                goal = Patch_IncidentWorker_Raid_TryExecuteWorker._pendingGoal;
+            if (Patch_IncidentWorker_Raid_TryExecute._pendingGoal != null)
+                goal = Patch_IncidentWorker_Raid_TryExecute._pendingGoal;
             // Existing raid being loaded: pull from the ExposeData cache
             else
                 Patch_LordJob_ExposeData.runtimeGoals.TryGetValue(__instance, out goal);

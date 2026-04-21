@@ -8,8 +8,6 @@ using Verse.AI.Group;
 
 namespace RaidsWithinReason
 {
-    // Prevents colonist AI from auto-targeting the negotiator pawn.
-    // The player can still manually order an attack, with consequences.
     [HarmonyPatch(typeof(Pawn), "ThreatDisabled")]
     public static class Patch_Pawn_ThreatDisabled_Negotiator
     {
@@ -43,27 +41,13 @@ namespace RaidsWithinReason
         }
     }
 
-    // Trigger immediate rescue raid if the negotiator is arrested.
-    [HarmonyPatch(typeof(Pawn_GuestTracker), nameof(Pawn_GuestTracker.SetGuestStatus))]
-    public static class Patch_Pawn_GuestTracker_SetGuestStatus
+    [HarmonyPatch(typeof(Pawn_GuestTracker), "CapturedBy")]
+    public static class Patch_Pawn_GuestTracker_CapturedBy
     {
         [HarmonyPrefix]
-        public static void Prefix(Pawn_GuestTracker __instance, Faction newHost, GuestStatus guestStatus)
+        public static void Prefix(Pawn_GuestTracker __instance)
         {
-            Pawn pawn = Traverse.Create(__instance).Field("pawn").GetValue<Pawn>();
-            if (pawn != null && NegotiatorUtil.IsNegotiator(pawn) && guestStatus == GuestStatus.Prisoner)
-            {
-                Faction faction = pawn.Faction;
-                Map     map     = pawn.Map;
-                Log.Message($"[RWR] Arrest detected on negotiator {pawn.LabelShort}. Faction: {faction?.Name}, Hostile: {faction?.HostileTo(Faction.OfPlayer)}");
-                if (faction != null && map != null && faction.HostileTo(Faction.OfPlayer))
-                {
-                    Messages.Message($"Negotiator arrested! {faction.Name} is launching a rescue operation!", MessageTypeDefOf.ThreatBig);
-                    
-                    RaidGoalDef goal = DefDatabase<RaidGoalDef>.GetNamedSilentFail("RaidGoal_ReleasePrisoner");
-                    NegotiatorUtil.TriggerImmediateRaid(faction, map, goal, 1.2f, pawn);
-                }
-            }
+            NegotiatorUtil.HandleArrestCheck(__instance);
         }
     }
 
@@ -229,6 +213,33 @@ namespace RaidsWithinReason
             return true;
         }
 
+        internal static void HandleArrestCheck(Pawn_GuestTracker tracker)
+        {
+            // Type-safe field lookup: find the first field that is of type Pawn.
+            // This bypasses name-level obfuscation or differences between RimWorld versions.
+            var field = AccessTools.GetDeclaredFields(typeof(Pawn_GuestTracker)).FirstOrDefault(f => f.FieldType == typeof(Pawn));
+            Pawn pawn = field?.GetValue(tracker) as Pawn;
+            
+            if (pawn != null && NegotiatorUtil.IsNegotiator(pawn))
+            {
+                PerformArrestEscalation(pawn, "Arrest detected via CapturedBy");
+            }
+        }
+
+        internal static void PerformArrestEscalation(Pawn pawn, string debugSource)
+        {
+            Faction faction = pawn.Faction;
+            Map     map     = pawn.Map;
+            if (faction != null && map != null && faction.HostileTo(Faction.OfPlayer))
+            {
+                Log.Message($"[RWR] Arrest escalation triggered via {debugSource} on negotiator {pawn.LabelShort}.");
+                Messages.Message($"Negotiator arrested! {faction.Name} is launching a rescue operation!", MessageTypeDefOf.ThreatBig);
+                
+                RaidGoalDef goal = DefDatabase<RaidGoalDef>.GetNamedSilentFail("RaidGoal_ReleasePrisoner");
+                NegotiatorUtil.TriggerImmediateRaid(faction, map, goal, 1.2f, pawn);
+            }
+        }
+
         internal static void TriggerImmediateRaid(Faction faction, Map map, RaidGoalDef goal, float pointsMultiplier = 1f, Pawn target = null)
         {
             IncidentParms parms = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatBig, map);
@@ -237,9 +248,9 @@ namespace RaidsWithinReason
             parms.points *= pointsMultiplier;
             
             // This global state is picked up by the Raid Incident Patch to assign the goal
-            Patch_IncidentWorker_Raid_TryExecuteWorker._pendingGoal    = goal;
-            Patch_IncidentWorker_Raid_TryExecuteWorker._pendingFaction = faction;
-            Patch_IncidentWorker_Raid_TryExecuteWorker._pendingTarget  = target;
+            Patch_IncidentWorker_Raid_TryExecute._pendingGoal    = goal;
+            Patch_IncidentWorker_Raid_TryExecute._pendingFaction = faction;
+            Patch_IncidentWorker_Raid_TryExecute._pendingTarget  = target;
             
             try
             {
@@ -248,9 +259,9 @@ namespace RaidsWithinReason
             }
             finally
             {
-                Patch_IncidentWorker_Raid_TryExecuteWorker._pendingGoal    = null;
-                Patch_IncidentWorker_Raid_TryExecuteWorker._pendingFaction = null;
-                Patch_IncidentWorker_Raid_TryExecuteWorker._pendingTarget  = null;
+                Patch_IncidentWorker_Raid_TryExecute._pendingGoal    = null;
+                Patch_IncidentWorker_Raid_TryExecute._pendingFaction = null;
+                Patch_IncidentWorker_Raid_TryExecute._pendingTarget  = null;
             }
         }
         internal static int ConsumeResources(Map map, ThingDef def, int amount)

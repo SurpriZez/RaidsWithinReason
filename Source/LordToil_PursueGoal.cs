@@ -195,7 +195,7 @@ namespace RaidsWithinReason
                     // Use the pending target if we just started, otherwise stay locked on.
                     targetPawn = (current != null && current.IsPrisonerOfColony) 
                         ? current 
-                        : Patch_IncidentWorker_Raid_TryExecuteWorker._pendingTarget;
+                        : Patch_IncidentWorker_Raid_TryExecute._pendingTarget;
 
                     if (targetPawn == null || !targetPawn.IsPrisonerOfColony)
                     {

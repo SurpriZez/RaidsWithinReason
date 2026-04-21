@@ -75,18 +75,18 @@ namespace RaidsWithinReason
             IncidentParms parms = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatBig, map);
             parms.faction = faction;
 
-            Patch_IncidentWorker_Raid_TryExecuteWorker._pendingGoal    = goal;
-            Patch_IncidentWorker_Raid_TryExecuteWorker._pendingFaction = faction;
-            Patch_IncidentWorker_Raid_TryExecuteWorker._debugForceGoal = true;
+            Patch_IncidentWorker_Raid_TryExecute._pendingGoal    = goal;
+            Patch_IncidentWorker_Raid_TryExecute._pendingFaction = faction;
+            Patch_IncidentWorker_Raid_TryExecute._debugForceGoal = true;
             try
             {
                 IncidentDefOf.RaidEnemy.Worker.TryExecute(parms);
             }
             finally
             {
-                Patch_IncidentWorker_Raid_TryExecuteWorker._pendingGoal    = null;
-                Patch_IncidentWorker_Raid_TryExecuteWorker._pendingFaction = null;
-                Patch_IncidentWorker_Raid_TryExecuteWorker._debugForceGoal = false;
+                Patch_IncidentWorker_Raid_TryExecute._pendingGoal    = null;
+                Patch_IncidentWorker_Raid_TryExecute._pendingFaction = null;
+                Patch_IncidentWorker_Raid_TryExecute._debugForceGoal = false;
             }
 
             Log.Message($"[RWR] Forced raid with goal: {goal.defName} from {faction?.Name ?? "unknown faction"}");

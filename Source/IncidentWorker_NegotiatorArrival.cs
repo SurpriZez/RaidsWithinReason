@@ -22,6 +22,7 @@ namespace RaidsWithinReason
 
         protected override bool TryExecuteWorker(IncidentParms parms)
         {
+            parms.sendLetter = false; // Suppress the vanilla letter since we send our own ChoiceLetter.
             Map     map     = (Map)parms.target;
             Faction faction = parms.faction ?? Find.FactionManager.RandomEnemyFaction(allowHidden: false, allowDefeated: false, allowNonHumanlike: false);
             if (faction == null) { Log.Warning("[RWR] No valid humanlike enemy faction found."); return false; }

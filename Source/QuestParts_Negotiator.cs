@@ -160,18 +160,18 @@ namespace RaidsWithinReason
             IncidentParms parms   = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatBig, map);
             parms.faction         = faction;
 
-            Patch_IncidentWorker_Raid_TryExecuteWorker._skipInterception = true;
-            Patch_IncidentWorker_Raid_TryExecuteWorker._pendingGoal      = goalDef;
-            Patch_IncidentWorker_Raid_TryExecuteWorker._pendingFaction   = faction;
+            Patch_IncidentWorker_Raid_TryExecute._skipInterception = true;
+            Patch_IncidentWorker_Raid_TryExecute._pendingGoal      = goalDef;
+            Patch_IncidentWorker_Raid_TryExecute._pendingFaction   = faction;
             try
             {
                 raidDef.Worker.TryExecute(parms);
             }
             finally
             {
-                Patch_IncidentWorker_Raid_TryExecuteWorker._skipInterception = false;
-                Patch_IncidentWorker_Raid_TryExecuteWorker._pendingGoal      = null;
-                Patch_IncidentWorker_Raid_TryExecuteWorker._pendingFaction   = null;
+                Patch_IncidentWorker_Raid_TryExecute._skipInterception = false;
+                Patch_IncidentWorker_Raid_TryExecute._pendingGoal      = null;
+                Patch_IncidentWorker_Raid_TryExecute._pendingFaction   = null;
             }
 
             // Assign the forced goal to any lords that spawned from this raid

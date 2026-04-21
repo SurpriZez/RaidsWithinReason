@@ -11,7 +11,7 @@ namespace RaidsWithinReason
         public Alert_NegotiatorPresent()
         {
             this.defaultLabel = "Negotiator present";
-            this.defaultPriority = AlertPriority.Medium;
+            this.defaultPriority = AlertPriority.Critical;
         }
 
 
