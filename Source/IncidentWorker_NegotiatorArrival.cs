@@ -92,7 +92,6 @@ namespace RaidsWithinReason
                     developmentalStages: DevelopmentalStage.Adult);
                 Pawn pawn = PawnGenerator.GeneratePawn(request);
                 GenSpawn.Spawn(pawn, cell, map, Rot4.Random);
-                pawn.guest?.SetGuestStatus(Faction.OfPlayer, GuestStatus.Guest);
                 return pawn;
             }
             catch (System.Exception e)

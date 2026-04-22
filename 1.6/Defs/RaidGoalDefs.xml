@@ -51,4 +51,14 @@
     <retreatOnSuccess>true</retreatOnSuccess>
   </RaidsWithinReason.RaidGoalDef>
 
+  <RaidsWithinReason.RaidGoalDef>
+    <defName>RaidGoal_Retaliation</defName>
+    <label>retaliation</label>
+    <goalType>Retaliation</goalType>
+    <targetDescription>assault the colony in retaliation for harming their negotiator</targetDescription>
+    <successGoodwillDelta>-20</successGoodwillDelta>
+    <failureGoodwillDelta>-10</failureGoodwillDelta>
+    <retreatOnSuccess>false</retreatOnSuccess>
+  </RaidsWithinReason.RaidGoalDef>
+
 </Defs>

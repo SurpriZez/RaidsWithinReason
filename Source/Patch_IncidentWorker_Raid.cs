@@ -27,7 +27,7 @@ namespace RaidsWithinReason
             if (!(__instance is IncidentWorker_Raid)) return true;
 
             // Goal already set or explicitly requested to skip mod interception.
-            if (_debugForceGoal || _skipInterception) return true;
+            if (_debugForceGoal || _skipInterception || _pendingGoal != null) return true;
 
             Map     map     = parms.target as Map;
             Faction faction = parms.faction;

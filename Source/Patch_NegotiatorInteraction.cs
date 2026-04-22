@@ -19,6 +19,41 @@ namespace RaidsWithinReason
         }
     }
 
+    [HarmonyPatch(typeof(GenHostility), nameof(GenHostility.HostileTo), new[] { typeof(Thing), typeof(Thing) })]
+    public static class Patch_GenHostility_HostileTo_Thing_Thing
+    {
+        [HarmonyPrefix]
+        public static bool Prefix(Thing a, Thing b, ref bool __result)
+        {
+            if (a is Pawn p1 && NegotiatorUtil.IsNegotiator(p1) && !NegotiatorUtil.IsEscalated(p1))
+            {
+                __result = false;
+                return false;
+            }
+            if (b is Pawn p2 && NegotiatorUtil.IsNegotiator(p2) && !NegotiatorUtil.IsEscalated(p2))
+            {
+                __result = false;
+                return false;
+            }
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(GenHostility), nameof(GenHostility.HostileTo), new[] { typeof(Thing), typeof(Faction) })]
+    public static class Patch_GenHostility_HostileTo_Thing_Faction
+    {
+        [HarmonyPrefix]
+        public static bool Prefix(Thing t, Faction fac, ref bool __result)
+        {
+            if (t is Pawn p && NegotiatorUtil.IsNegotiator(p) && !NegotiatorUtil.IsEscalated(p))
+            {
+                __result = false;
+                return false;
+            }
+            return true;
+        }
+    }
+
     // Trigger immediate retaliation if the negotiator is murdered.
     [HarmonyPatch(typeof(Pawn), nameof(Pawn.Kill))]
     public static class Patch_Pawn_Kill_Negotiator
@@ -28,26 +63,21 @@ namespace RaidsWithinReason
         {
             if (NegotiatorUtil.IsNegotiator(__instance))
             {
-                Faction faction = __instance.Faction;
-                Map     map     = __instance.Map;
-                if (faction != null && map != null)
-                {
-                    Messages.Message($"Negotiator murdered! {faction.Name} is launching an immediate retaliatory strike!", MessageTypeDefOf.ThreatBig);
-                    
-                    RaidGoalDef goal = DefDatabase<RaidGoalDef>.GetNamedSilentFail("RaidGoal_Revenge");
-                    NegotiatorUtil.TriggerImmediateRaid(faction, map, goal);
-                }
+                NegotiatorUtil.PerformDamageEscalation(__instance, "Pawn.Kill");
             }
         }
     }
 
-    [HarmonyPatch(typeof(Pawn_GuestTracker), "CapturedBy")]
-    public static class Patch_Pawn_GuestTracker_CapturedBy
+    [HarmonyPatch(typeof(Pawn), "PostApplyDamage")]
+    public static class Patch_Pawn_PostApplyDamage_Negotiator
     {
-        [HarmonyPrefix]
-        public static void Prefix(Pawn_GuestTracker __instance)
+        [HarmonyPostfix]
+        public static void Postfix(Pawn __instance, DamageInfo dinfo)
         {
-            NegotiatorUtil.HandleArrestCheck(__instance);
+            if (dinfo.Amount > 0.1f && NegotiatorUtil.IsNegotiator(__instance))
+            {
+                NegotiatorUtil.PerformDamageEscalation(__instance, $"Damage({dinfo.Def.defName})");
+            }
         }
     }
 
@@ -158,9 +188,20 @@ namespace RaidsWithinReason
 
         internal static bool IsNegotiator(Pawn pawn)
         {
+            if (pawn == null) return false;
             if (_hediffDef == null)
                 _hediffDef = DefDatabase<HediffDef>.GetNamedSilentFail("RWR_Negotiator");
             return _hediffDef != null && (pawn.health?.hediffSet?.HasHediff(_hediffDef) ?? false);
+        }
+
+        internal static bool IsEscalated(Pawn pawn)
+        {
+            if (pawn == null) return false;
+            var lord = pawn.GetLord();
+            if (lord == null) return false;
+
+            var comp = Current.Game.GetComponent<NegotiatorCooldownComponent>();
+            return comp != null && comp.HasLordEscalated(lord.loadID);
         }
 
         internal static void ScheduleRetaliation(Faction faction, Map map, RaidGoalDef goal = null)
@@ -213,29 +254,48 @@ namespace RaidsWithinReason
             return true;
         }
 
-        internal static void HandleArrestCheck(Pawn_GuestTracker tracker)
-        {
-            // Type-safe field lookup: find the first field that is of type Pawn.
-            // This bypasses name-level obfuscation or differences between RimWorld versions.
-            var field = AccessTools.GetDeclaredFields(typeof(Pawn_GuestTracker)).FirstOrDefault(f => f.FieldType == typeof(Pawn));
-            Pawn pawn = field?.GetValue(tracker) as Pawn;
-            
-            if (pawn != null && NegotiatorUtil.IsNegotiator(pawn))
-            {
-                PerformArrestEscalation(pawn, "Arrest detected via CapturedBy");
-            }
-        }
+        private static int _lastRetaliationTick = -1;
+        private static int _lastEscalatedPawnID = -1;
 
-        internal static void PerformArrestEscalation(Pawn pawn, string debugSource)
+        internal static void PerformDamageEscalation(Pawn pawn, string debugSource)
         {
+            if (pawn == null) return;
+
+            // Immediate tick-based de-duplication to catch rapid-fire events (Damage + Kill)
+            if (Find.TickManager.TicksGame == _lastRetaliationTick && _lastEscalatedPawnID == pawn.thingIDNumber)
+            {
+                return;
+            }
+
+            Lord lord = pawn.GetLord();
+            if (lord == null) return;
+
+            var comp = Current.Game.GetComponent<NegotiatorCooldownComponent>();
+            if (comp == null || comp.HasLordEscalated(lord.loadID)) return;
+
             Faction faction = pawn.Faction;
             Map     map     = pawn.Map;
-            if (faction != null && map != null && faction.HostileTo(Faction.OfPlayer))
+
+            if (faction != null && map != null)
             {
-                Log.Message($"[RWR] Arrest escalation triggered via {debugSource} on negotiator {pawn.LabelShort}.");
-                Messages.Message($"Negotiator arrested! {faction.Name} is launching a rescue operation!", MessageTypeDefOf.ThreatBig);
+                _lastRetaliationTick = Find.TickManager.TicksGame;
+                _lastEscalatedPawnID = pawn.thingIDNumber;
+
+                comp.RecordLordEscalated(lord.loadID);
+
+                Log.Message($"[RWR] Damage escalation triggered via {debugSource} on negotiator {pawn.LabelShort}. Party is fighting back!");
                 
-                RaidGoalDef goal = DefDatabase<RaidGoalDef>.GetNamedSilentFail("RaidGoal_ReleasePrisoner");
+                string msgText = debugSource.Contains("Kill") 
+                    ? $"Negotiator murdered! {faction.Name} is launching an immediate retaliatory strike!" 
+                    : $"Negotiator harmed! {faction.Name} is launching a retaliatory strike!";
+                
+                Messages.Message(msgText, MessageTypeDefOf.ThreatBig);
+                
+                // 1. Negotiation party fights back! (Transition their LordJob to AssaultColony)
+                lord.ReceiveMemo("NegotiatorAssault");
+
+                // 2. Spawn external reinforcement raid with 'Retaliation' goal
+                RaidGoalDef goal = DefDatabase<RaidGoalDef>.GetNamedSilentFail("RaidGoal_Retaliation");
                 NegotiatorUtil.TriggerImmediateRaid(faction, map, goal, 1.2f, pawn);
             }
         }
@@ -245,12 +305,14 @@ namespace RaidsWithinReason
             IncidentParms parms = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatBig, map);
             parms.faction = faction;
             parms.raidArrivalMode = PawnsArrivalModeDefOf.EdgeWalkIn;
-            parms.points *= pointsMultiplier;
+            parms.raidStrategy    = RaidStrategyDefOf.ImmediateAttack;
+            parms.points          = UnityEngine.Mathf.Max(parms.points * pointsMultiplier, 150f);
             
             // This global state is picked up by the Raid Incident Patch to assign the goal
-            Patch_IncidentWorker_Raid_TryExecute._pendingGoal    = goal;
-            Patch_IncidentWorker_Raid_TryExecute._pendingFaction = faction;
-            Patch_IncidentWorker_Raid_TryExecute._pendingTarget  = target;
+            Patch_IncidentWorker_Raid_TryExecute._pendingGoal      = goal;
+            Patch_IncidentWorker_Raid_TryExecute._pendingFaction   = faction;
+            Patch_IncidentWorker_Raid_TryExecute._pendingTarget    = target;
+            Patch_IncidentWorker_Raid_TryExecute._skipInterception = true;
             
             try
             {
@@ -259,9 +321,10 @@ namespace RaidsWithinReason
             }
             finally
             {
-                Patch_IncidentWorker_Raid_TryExecute._pendingGoal    = null;
-                Patch_IncidentWorker_Raid_TryExecute._pendingFaction = null;
-                Patch_IncidentWorker_Raid_TryExecute._pendingTarget  = null;
+                Patch_IncidentWorker_Raid_TryExecute._pendingGoal      = null;
+                Patch_IncidentWorker_Raid_TryExecute._pendingFaction   = null;
+                Patch_IncidentWorker_Raid_TryExecute._pendingTarget    = null;
+                Patch_IncidentWorker_Raid_TryExecute._skipInterception = false;
             }
         }
         internal static int ConsumeResources(Map map, ThingDef def, int amount)

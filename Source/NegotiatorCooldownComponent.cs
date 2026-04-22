@@ -10,6 +10,7 @@ namespace RaidsWithinReason
     public class NegotiatorCooldownComponent : GameComponent
     {
         private Dictionary<Faction, int> lastNegotiatorTick = new Dictionary<Faction, int>();
+        private HashSet<int>            _escalatedLordIds  = new HashSet<int>();
 
         public NegotiatorCooldownComponent(Game game) : base() { }
 
@@ -25,6 +26,10 @@ namespace RaidsWithinReason
             lastNegotiatorTick[faction] = Find.TickManager.TicksGame;
         }
 
+        public bool HasLordEscalated(int lordId) => _escalatedLordIds.Contains(lordId);
+
+        public void RecordLordEscalated(int lordId) => _escalatedLordIds.Add(lordId);
+
         private List<Faction> _cooldownKeys;
         private List<int>     _cooldownValues;
 
@@ -32,12 +37,16 @@ namespace RaidsWithinReason
         {
             Scribe_Collections.Look(ref lastNegotiatorTick, "lastNegotiatorTick",
                 LookMode.Reference, LookMode.Value, ref _cooldownKeys, ref _cooldownValues);
+            
+            Scribe_Collections.Look(ref _escalatedLordIds, "escalatedLordIds", LookMode.Value);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 lastNegotiatorTick ??= new Dictionary<Faction, int>();
                 foreach (Faction stale in lastNegotiatorTick.Keys.Where(k => k == null).ToList())
                     lastNegotiatorTick.Remove(stale);
+
+                _escalatedLordIds ??= new HashSet<int>();
             }
         }
     }

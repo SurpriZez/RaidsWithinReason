@@ -56,6 +56,18 @@ namespace RaidsWithinReason
             paid.triggers.Add(new Trigger_Memo("NegotiatorDismissed"));
             graph.AddTransition(paid);
 
+            // Harmed/Escalated → Assault the colony immediately!
+            var assault = new LordToil_AssaultColony();
+            graph.AddToil(assault);
+
+            var harmed_wait = new Transition(wait, assault);
+            harmed_wait.triggers.Add(new Trigger_Memo("NegotiatorAssault"));
+            graph.AddTransition(harmed_wait);
+
+            var harmed_waitForPayment = new Transition(waitForPayment, assault);
+            harmed_waitForPayment.triggers.Add(new Trigger_Memo("NegotiatorAssault"));
+            graph.AddTransition(harmed_waitForPayment);
+
             return graph;
         }
 

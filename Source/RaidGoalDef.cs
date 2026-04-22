@@ -9,6 +9,7 @@ namespace RaidsWithinReason
         Destroy,
         Revenge,
         ReleasePrisoner,
+        Retaliation,
     }
 
     public class RaidGoalDef : Def

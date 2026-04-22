@@ -41,7 +41,8 @@ namespace RaidsWithinReason
                     }
                     UpdateAllDuties();
                 }
-                else if (goal.goalType == RaidGoalType.Capture || goal.goalType == RaidGoalType.Revenge || goal.goalType == RaidGoalType.ReleasePrisoner)
+                else if (goal.goalType == RaidGoalType.Capture || goal.goalType == RaidGoalType.Revenge || 
+                         goal.goalType == RaidGoalType.ReleasePrisoner || goal.goalType == RaidGoalType.Retaliation)
                 {
                     if (goal.goalType == RaidGoalType.ReleasePrisoner && Map != null)
                         CheckForRescue(Map);
@@ -207,6 +208,11 @@ namespace RaidsWithinReason
                     tracker?.SetTargetPawn(lord, targetPawn);
                     break;
                 }
+
+                case RaidGoalType.Retaliation:
+                    // Standard assault behavior — raiders will pick their own targets.
+                    targetCell = IntVec3.Invalid;
+                    break;
             }
         }
 
@@ -277,6 +283,9 @@ namespace RaidsWithinReason
                     if (targetPawn == null || !targetPawn.IsPrisonerOfColony)
                         return new PawnDuty(DutyDefOf.AssaultColony);
                     return new PawnDuty(DutyDefOf.AssaultColony, targetPawn);
+
+                case RaidGoalType.Retaliation:
+                    return new PawnDuty(DutyDefOf.AssaultColony);
 
                 default:
                     return new PawnDuty(DutyDefOf.AssaultColony);

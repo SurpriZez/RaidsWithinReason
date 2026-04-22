@@ -6,5 +6,13 @@
   <supportedVersions>
     <li>1.6</li>
   </supportedVersions>
-  <description>Raids Within Reason — makes raid composition and timing respond to in-game context rather than pure wealth scaling.</description>
+  <description>Raids Within Reason — overhauls RimWorld's raid logic to give enemies clear, context-aware objectives. Instead of generic destruction, raiders now have specific goals based on what they actually want from your colony.
+
+Features:
+- Contextual Raid Goals: Raiders target valuables (Loot), specific colonists (Capture), vital rooms (Destroy), or specific pawns in blood feuds (Revenge).
+- Negotiation System: Hostile factions may send a negotiator first to make demands or announce their intent. Comply, refuse, or escalate.
+- Rescue Missions: Harm or arrest a negotiator to trigger high-intensity rescue raids.
+- Dynamic AI: Objectives integrate with standard raid types (Assault, Siege, Staged), making every encounter unique.
+
+Developed by SurpriZez.</description>
 </ModMetaData>
