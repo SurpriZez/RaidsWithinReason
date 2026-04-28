@@ -61,7 +61,7 @@ namespace RaidsWithinReason
                 new LordJob_NegotiatorVisit(spawnCell, GenDate.TicksPerDay, request), map);
             foreach (Pawn p in allPawns) lord.AddPawn(p);
 
-            var letter = (ChoiceLetter_NegotiatorArrival)LetterMaker.MakeLetter("Negotiator Arrives", BuildLetterText(faction, request), DefDatabase<LetterDef>.GetNamed("RWR_Letter_NegotiatorArrival"));
+            var letter = (ChoiceLetter_NegotiatorArrival)LetterMaker.MakeLetter("RWR_NegotiatorArrivalLetterLabel".Translate(), BuildLetterText(faction, request), DefDatabase<LetterDef>.GetNamed("RWR_Letter_NegotiatorArrival"));
             letter.lookTargets    = new LookTargets(negotiator);
             letter.relatedFaction = faction;
             letter.negotiator     = negotiator;
@@ -174,10 +174,7 @@ namespace RaidsWithinReason
 
         private static string BuildLetterText(Faction faction, NegotiationRequest request)
         {
-            return $"A negotiator from {faction.Name} has arrived at your colony's border.\n\n" +
-                   $"Their demand: {request.template.targetDescription} ({request.TargetDescription}).\n\n" +
-                   $"You have {request.template.timeLimitDays} days to comply. Refusing or ignoring them " +
-                   $"will provoke a retaliatory raid within 1\u20134 days.";
+            return "RWR_NegotiatorArrivalLetterText".Translate(faction.Name, request.template.targetDescription, request.TargetDescription, request.template.timeLimitDays);
         }
     }
 
@@ -200,7 +197,7 @@ namespace RaidsWithinReason
 
         private DiaOption OptionAccept()
         {
-            var opt = new DiaOption("Accept");
+            var opt = new DiaOption("RWR_OptionAccept".Translate());
             opt.resolveTree = true;
             opt.action = () =>
             {
@@ -211,24 +208,24 @@ namespace RaidsWithinReason
                     int available = ColonyStateReader.GetStockedAmount(incidentMap, request.thingDef);
                     if (available < request.amount)
                     {
-                        string failText = $"You no longer have enough {thingLabel} to fulfill this demand. (Required: {request.amount}, Available: {available})";
+                        string failText = "RWR_DemandFailNotEnough".Translate(thingLabel, request.amount, available);
                         Find.WindowStack.Add(new Dialog_MessageBox(failText));
                         return;
                     }
 
-                    string confirmText = $"Instantly deliver {request.amount} {thingLabel} from your stockpiles to {relatedFaction?.Name}?";
+                    string confirmText = "RWR_DemandConfirmDeliver".Translate(request.amount, thingLabel, relatedFaction?.Name ?? (string)"RWR_UnknownFaction".Translate());
                     Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(confirmText, () =>
                     {
                         int taken = NegotiatorUtil.ConsumeResources(incidentMap, request.thingDef, request.amount);
                         if (taken >= request.amount)
                         {
-                            Messages.Message($"Successfully delivered {request.amount} {thingLabel} to the negotiator. They are departing peacefully.", MessageTypeDefOf.PositiveEvent);
+                            Messages.Message("RWR_MessageDeliveredSuccessfully".Translate(request.amount, thingLabel), MessageTypeDefOf.PositiveEvent);
                             negotiatorLord?.ReceiveMemo("NegotiatorDismissed");
                             Find.LetterStack.RemoveLetter(this);
                         }
                         else
                         {
-                            Messages.Message($"Internal error: Could only find {taken} {thingLabel} during consumption.", MessageTypeDefOf.RejectInput);
+                            Messages.Message("RWR_MessageConsumeError".Translate(taken, thingLabel), MessageTypeDefOf.RejectInput);
                         }
                     }));
                 }
@@ -237,11 +234,11 @@ namespace RaidsWithinReason
                     Pawn prisoner = request.targetPawn;
                     if (prisoner == null || prisoner.Dead || prisoner.Destroyed || !prisoner.IsPrisonerOfColony)
                     {
-                        Find.WindowStack.Add(new Dialog_MessageBox("The required prisoner is no longer available. You must refuse or ignore the demand."));
+                        Find.WindowStack.Add(new Dialog_MessageBox("RWR_DemandPrisonerUnavailable".Translate()));
                         return;
                     }
 
-                    string confirmText = $"Instantly hand over {prisoner.LabelShort} and release them to {relatedFaction?.Name}?";
+                    string confirmText = "RWR_DemandConfirmHandover".Translate(prisoner.LabelShort, relatedFaction?.Name ?? (string)"RWR_UnknownFaction".Translate());
                     Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(confirmText, () =>
                     {
                         if (NegotiatorUtil.HandoverPrisoner(prisoner, negotiator, incidentMap))
@@ -253,9 +250,7 @@ namespace RaidsWithinReason
                 }
                 else
                 {
-                    string confirmText =
-                        $"Deliver {request.TargetDescription} to {relatedFaction?.Name}?\n\n" +
-                        "A compliance timer will begin. Failure to deliver will still trigger a raid.";
+                    string confirmText = "RWR_DemandConfirmQuest".Translate(request.TargetDescription, relatedFaction?.Name ?? (string)"RWR_UnknownFaction".Translate());
 
                     Find.WindowStack.Add(Dialog_MessageBox.CreateConfirmation(confirmText, () =>
                     {
@@ -278,7 +273,7 @@ namespace RaidsWithinReason
 
         private DiaOption OptionRefuse()
         {
-            var opt = new DiaOption("Refuse");
+            var opt = new DiaOption("RWR_OptionRefuse".Translate());
             opt.resolveTree = true;
             opt.action = () =>
             {
@@ -287,8 +282,8 @@ namespace RaidsWithinReason
                 negotiatorLord?.ReceiveMemo("NegotiatorDismissed");
                 Find.LetterStack.RemoveLetter(this);
                 Find.LetterStack.ReceiveLetter(
-                    $"You refused the demand",
-                    $"The negotiator from {relatedFaction?.Name} has left, but they will return.",
+                    "RWR_RefusedDemandLetterTitle".Translate(),
+                    "RWR_RefusedDemandLetterText".Translate(relatedFaction?.Name ?? (string)"RWR_UnknownFaction".Translate()),
                     LetterDefOf.NegativeEvent);
             };
             return opt;
@@ -296,7 +291,7 @@ namespace RaidsWithinReason
 
         private DiaOption OptionIgnore()
         {
-            var opt = new DiaOption("Ignore for now");
+            var opt = new DiaOption("RWR_OptionIgnore".Translate());
             opt.resolveTree = true;
             opt.action = () =>
             {

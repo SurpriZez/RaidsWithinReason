@@ -5,6 +5,6 @@ namespace RaidsWithinReason
 {
     public class RWR_DeliveryPoint : WorldObject
     {
-        public override string Label => "Delivery Point";
+        public override string Label => "RWR_DeliveryPointLabel".Translate();
     }
 }

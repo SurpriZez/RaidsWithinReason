@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <!-- Mod Settings -->
+  <RWR_SettingsCategory>Raids Within Reason</RWR_SettingsCategory>
+  <RWR_Setting_EnableGoalLetters>Show pre-raid goal announcement letter</RWR_Setting_EnableGoalLetters>
+  <RWR_Setting_EnableRetreatOnSuccess>Raiders retreat after achieving their objective</RWR_Setting_EnableRetreatOnSuccess>
+  <RWR_Setting_ChaoticRaidChance>Chance a raid ignores goals and attacks randomly (0 = all raids have purpose): {0}</RWR_Setting_ChaoticRaidChance>
+  <RWR_Setting_NegotiationChance>Chance faction negotiates before raiding: {0}</RWR_Setting_NegotiationChance>
+  <RWR_Setting_NegotiatorCooldownDays>Min days between negotiators from same faction: {0}</RWR_Setting_NegotiatorCooldownDays>
+  <RWR_DeliveryPointLabel>Delivery Point</RWR_DeliveryPointLabel>
+
+  <!-- General -->
+  <RWR_UnknownFaction>unknown faction</RWR_UnknownFaction>
+  <RWR_DemandedPrisoner>demanded prisoner</RWR_DemandedPrisoner>
+  <RWR_Understood>Understood</RWR_Understood>
+  <RWR_UnknownRaiders>The raiders</RWR_UnknownRaiders>
+
+  <!-- Quests -->
+  <RWR_QuestPart_ReleasePrisoner>Release prisoner: {0}</RWR_QuestPart_ReleasePrisoner>
+  <RWR_QuestPart_DeliverDemand>Deliver {0} to the negotiator</RWR_QuestPart_DeliverDemand>
+  <RWR_DemandExpiredTitle>Demand Expired</RWR_DemandExpiredTitle>
+  <RWR_DemandExpiredText>Your failure to comply with the demands of {0} has provoked a raid.</RWR_DemandExpiredText>
+  <RWR_QuestPart_TimeRemaining>Time remaining: {0}</RWR_QuestPart_TimeRemaining>
+  <RWR_QuestPart_Expired>Expired</RWR_QuestPart_Expired>
+  <RWR_DemandFulfilledTitle>Demand Fulfilled</RWR_DemandFulfilledTitle>
+  <RWR_DemandFulfilledText>You have fulfilled the demands of {0}. Your relationship with them has improved by {1} goodwill.</RWR_DemandFulfilledText>
+  <RWR_RetaliationQuestName>Retaliation: {0}</RWR_RetaliationQuestName>
+  <RWR_RetaliationQuestDesc>Having refused the demands of {0}, they are preparing a retaliatory raid.\n\nEstimated arrival: {1}</RWR_RetaliationQuestDesc>
+  <RWR_NegotiationQuestName>Negotiation: {0}</RWR_NegotiationQuestName>
+  <RWR_NegotiationQuestDesc>{0} demands: {1}\n\nRequired: {2}\nDeadline: {3} days\n\nFulfilling the demand will improve relations. Failure triggers an immediate raid.</RWR_NegotiationQuestDesc>
+  <RWR_NegotiationQuestRequirePawn>Right-click the negotiator to release prisoner {0}</RWR_NegotiationQuestRequirePawn>
+  <RWR_NegotiationQuestRequireItems>Right-click the negotiator to pay {0}</RWR_NegotiationQuestRequireItems>
+
+  <!-- Raid Pre-Letters -->
+  <RWR_RaidGoalLetterLabel>{0} raids with purpose</RWR_RaidGoalLetterLabel>
+  <RWR_RaidGoalRetreatYes>If the raiders achieve their objective they will retreat — stopping them before that will send them fleeing.</RWR_RaidGoalRetreatYes>
+  <RWR_RaidGoalRetreatNo>The raiders will not retreat even if they achieve their goal. Expect a sustained assault.</RWR_RaidGoalRetreatNo>
+  <RWR_RaidGoalDescRevenge>kill {0} in retaliation</RWR_RaidGoalDescRevenge>
+  <RWR_RaidGoalDescCapture>capture {0}</RWR_RaidGoalDescCapture>
+  <RWR_RaidGoalLetterText>Raiders from {0} have arrived with a specific objective:\n\n\"{1}\"\n\n{2}</RWR_RaidGoalLetterText>
+
+  <!-- Negotiator Arrival Dialogs -->
+  <RWR_NegotiatorArrivalLetterLabel>Negotiator Arrives</RWR_NegotiatorArrivalLetterLabel>
+  <RWR_NegotiatorArrivalLetterText>A negotiator from {0} has arrived at your colony's border.\n\nTheir demand: {1} ({2}).\n\nYou have {3} days to comply. Refusing or ignoring them will provoke a retaliatory raid within 1–4 days.</RWR_NegotiatorArrivalLetterText>
+  <RWR_OptionAccept>Accept</RWR_OptionAccept>
+  <RWR_DemandFailNotEnough>You no longer have enough {0} to fulfill this demand. (Required: {1}, Available: {2})</RWR_DemandFailNotEnough>
+  <RWR_DemandConfirmDeliver>Instantly deliver {0} {1} from your stockpiles to {2}?</RWR_DemandConfirmDeliver>
+  <RWR_MessageDeliveredSuccessfully>Successfully delivered {0} {1} to the negotiator. They are departing peacefully.</RWR_MessageDeliveredSuccessfully>
+  <RWR_MessageConsumeError>Internal error: Could only find {0} {1} during consumption.</RWR_MessageConsumeError>
+  <RWR_DemandPrisonerUnavailable>The required prisoner is no longer available. You must refuse or ignore the demand.</RWR_DemandPrisonerUnavailable>
+  <RWR_DemandConfirmHandover>Instantly hand over {0} and release them to {1}?</RWR_DemandConfirmHandover>
+  <RWR_DemandConfirmQuest>Deliver {0} to {1}?\n\nA compliance timer will begin. Failure to deliver will still trigger a raid.</RWR_DemandConfirmQuest>
+  <RWR_OptionRefuse>Refuse</RWR_OptionRefuse>
+  <RWR_RefusedDemandLetterTitle>You refused the demand</RWR_RefusedDemandLetterTitle>
+  <RWR_RefusedDemandLetterText>The negotiator from {0} has left, but they will return.</RWR_RefusedDemandLetterText>
+  <RWR_OptionIgnore>Ignore for now</RWR_OptionIgnore>
+
+  <!-- Negotiator Kill & Guard Events -->
+  <RWR_NegotiatorKilledTitle>{0} Will Not Forget This</RWR_NegotiatorKilledTitle>
+  <RWR_NegotiatorKilledText>{0}, a negotiator from {1}, has been killed.\n\nThe faction has declared immediate hostility and is preparing a retaliatory raid.\n\nGoodwill with {1}: {2}</RWR_NegotiatorKilledText>
+  <RWR_MessageGuardKilled>A guard from {0} was killed. The negotiator is departing and the compliance deadline has been halved.</RWR_MessageGuardKilled>
+
+  <!-- Negotiator Interaction Menu -->
+  <RWR_MenuOptionPayNegotiator>Pay {0} to negotiator ({1} available)</RWR_MenuOptionPayNegotiator>
+  <RWR_NotEnough>not enough</RWR_NotEnough>
+  <RWR_MessagePaymentDelivered>Payment delivered. The negotiator is satisfied.</RWR_MessagePaymentDelivered>
+  <RWR_MenuOptionPrisonerUnavailable>Required prisoner is no longer available</RWR_MenuOptionPrisonerUnavailable>
+  <RWR_MenuOptionPrisonerReleased>Prisoner already released</RWR_MenuOptionPrisonerReleased>
+  <RWR_MenuOptionHandoverPrisoner>Hand over {0} to negotiator</RWR_MenuOptionHandoverPrisoner>
+  <RWR_MessagePrisonerHandedOver>{0} has been handed over and released.</RWR_MessagePrisonerHandedOver>
+  
+  <!-- Negotiator Escalation Messages -->
+  <RWR_MessageNegotiatorMurdered>Negotiator murdered! {0} is launching an immediate retaliatory strike!</RWR_MessageNegotiatorMurdered>
+  <RWR_MessageNegotiatorHarmed>Negotiator harmed! {0} is launching a retaliatory strike!</RWR_MessageNegotiatorHarmed>
+
+  <!-- Raid Goal Resolution & CleanUp -->
+  <RWR_MessageRoutedRetaliation>The forces of {0} have been routed. Expect retaliation.</RWR_MessageRoutedRetaliation>
+  <RWR_PostRaidTitleSuccess>{0}: raid objective complete</RWR_PostRaidTitleSuccess>
+  <RWR_PostRaidTitleFailure>{0}: raid objective failed</RWR_PostRaidTitleFailure>
+  <RWR_PostRaidOutcomeSuccess>The raiders achieved their objective: {0}.</RWR_PostRaidOutcomeSuccess>
+  <RWR_PostRaidOutcomeFailure>The raiders of {0} were driven off before achieving their objective.</RWR_PostRaidOutcomeFailure>
+  <RWR_PostRaidGoodwillPositive>Goodwill with {0}: +{1}</RWR_PostRaidGoodwillPositive>
+  <RWR_PostRaidGoodwillNegative>Goodwill with {0}: {1}</RWR_PostRaidGoodwillNegative>
+  
+  <RWR_GoalSuccessLootDetail>your colonists' valuables ({0} silver worth)</RWR_GoalSuccessLootDetail>
+  <RWR_GoalSuccessFallbackLoot>your valuables</RWR_GoalSuccessFallbackLoot>
+  <RWR_GoalSuccessFallbackCapture>one of your colonists</RWR_GoalSuccessFallbackCapture>
+  <RWR_GoalSuccessFallbackDestroy>prized furnishings</RWR_GoalSuccessFallbackDestroy>
+  <RWR_GoalSuccessFallbackRevenge>your strongest fighter</RWR_GoalSuccessFallbackRevenge>
+  <RWR_GoalSuccessDescLoot>{0} has seized {1} and is withdrawing from your colony.</RWR_GoalSuccessDescLoot>
+  <RWR_GoalSuccessDescCapture>{0} has abducted {1} and is withdrawing.</RWR_GoalSuccessDescCapture>
+  <RWR_GoalSuccessDescDestroy>{0} has destroyed your {1} and is withdrawing.</RWR_GoalSuccessDescDestroy>
+  <RWR_GoalSuccessDescRevenge>{0} has made an example of {1} and is withdrawing.</RWR_GoalSuccessDescRevenge>
+  <RWR_GoalSuccessDescGeneric>{0} has achieved their objective and is withdrawing.</RWR_GoalSuccessDescGeneric>
+  <RWR_GoalSuccessTitle>{0} got what they came for</RWR_GoalSuccessTitle>
+
+  <!-- Alerts and Job Messages -->
+  <RWR_AlertNegotiatorPresentLabel>Negotiator present</RWR_AlertNegotiatorPresentLabel>
+  <RWR_AlertNegotiatorPresentDesc>One or more negotiators from another faction are waiting at your borders. You should talk to them or consider their demands before they lose patience.</RWR_AlertNegotiatorPresentDesc>
+  <RWR_MessagePrisonerFreedByRaid>{0} has been freed by {1} raiders!</RWR_MessagePrisonerFreedByRaid>
+
+</LanguageData>

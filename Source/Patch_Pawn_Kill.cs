@@ -84,10 +84,8 @@ namespace RaidsWithinReason
                    .Enqueue(faction, map, delayTicks, forcedGoal);
 
             Find.LetterStack.ReceiveLetter(
-                $"{faction.Name} Will Not Forget This",
-                $"{pawn.LabelShort}, a negotiator from {faction.Name}, has been killed.\n\n" +
-                $"The faction has declared immediate hostility and is preparing a retaliatory raid.\n\n" +
-                $"Goodwill with {faction.Name}: {penalty}",
+                "RWR_NegotiatorKilledTitle".Translate(faction.Name),
+                "RWR_NegotiatorKilledText".Translate(pawn.LabelShort, faction.Name, penalty),
                 LetterDefOf.ThreatBig,
                 new LookTargets(pawn));
 
@@ -104,8 +102,7 @@ namespace RaidsWithinReason
             HalveQuestTimeLimit(faction);
 
             Messages.Message(
-                $"A guard from {faction.Name} was killed. The negotiator is departing " +
-                "and the compliance deadline has been halved.",
+                "RWR_MessageGuardKilled".Translate(faction.Name),
                 new LookTargets(pawn),
                 MessageTypeDefOf.NegativeEvent);
         }

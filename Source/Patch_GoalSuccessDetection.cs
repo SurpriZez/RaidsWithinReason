@@ -84,7 +84,7 @@ namespace RaidsWithinReason
             {
                 var tracker = __state.map.GetComponent<RaidGoalTracker>();
                 GoalSuccessLetters.TrySend(__state.lord, __state.goal, __state.map,
-                    $"your colonists' valuables ({(int)tracker.GetLootValue(__state.lord)} silver worth)");
+                    "RWR_GoalSuccessLootDetail".Translate((int)tracker.GetLootValue(__state.lord)));
             }
         }
     }
@@ -136,18 +136,18 @@ namespace RaidsWithinReason
             if (goal == null || map == null) return;
             if (!goal.retreatOnSuccess || !RWR_Mod.Settings.enableRetreatOnSuccess) return;
 
-            string faction = lord?.faction?.Name ?? "The raiders";
+            string faction = lord?.faction?.Name ?? (string)"RWR_UnknownRaiders".Translate();
             string body = goal.goalType switch
             {
-                RaidGoalType.Loot    => $"{faction} has seized {detail ?? "your valuables"} and is withdrawing from your colony.",
-                RaidGoalType.Capture => $"{faction} has abducted {detail ?? "one of your colonists"} and is withdrawing.",
-                RaidGoalType.Destroy  => $"{faction} has destroyed your {detail ?? "prized furnishings"} and is withdrawing.",
-                RaidGoalType.Revenge  => $"{faction} has made an example of {detail ?? "your strongest fighter"} and is withdrawing.",
-                _                   => $"{faction} has achieved their objective and is withdrawing.",
+                RaidGoalType.Loot    => "RWR_GoalSuccessDescLoot".Translate(faction, detail ?? (string)"RWR_GoalSuccessFallbackLoot".Translate()),
+                RaidGoalType.Capture => "RWR_GoalSuccessDescCapture".Translate(faction, detail ?? (string)"RWR_GoalSuccessFallbackCapture".Translate()),
+                RaidGoalType.Destroy => "RWR_GoalSuccessDescDestroy".Translate(faction, detail ?? (string)"RWR_GoalSuccessFallbackDestroy".Translate()),
+                RaidGoalType.Revenge => "RWR_GoalSuccessDescRevenge".Translate(faction, detail ?? (string)"RWR_GoalSuccessFallbackRevenge".Translate()),
+                _                    => "RWR_GoalSuccessDescGeneric".Translate(faction),
             };
 
             Find.LetterStack.ReceiveLetter(
-                $"{faction} got what they came for",
+                "RWR_GoalSuccessTitle".Translate(faction),
                 body,
                 LetterDefOf.NegativeEvent,
                 new LookTargets(map.Parent));

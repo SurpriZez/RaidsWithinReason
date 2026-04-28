@@ -69,7 +69,7 @@ namespace RaidsWithinReason
             Current.Game.GetComponent<PendingRaidComponent>()?.Enqueue(faction, homeMap, delay, revenge);
 
             Messages.Message(
-                $"The forces of {faction.Name} have been routed. Expect retaliation.",
+                "RWR_MessageRoutedRetaliation".Translate(faction.Name),
                 MessageTypeDefOf.ThreatSmall);
         }
 
@@ -77,21 +77,21 @@ namespace RaidsWithinReason
                                                   bool succeeded, float delta,
                                                   Faction faction, Map map)
         {
-            string factionName = faction?.Name ?? "The raiders";
+            string factionName = faction?.Name ?? (string)"RWR_UnknownRaiders".Translate();
             int    deltaRounded = Mathf.RoundToInt(delta);
 
             string title = succeeded
-                ? $"{factionName}: raid objective complete"
-                : $"{factionName}: raid objective failed";
+                ? (string)"RWR_PostRaidTitleSuccess".Translate(factionName)
+                : (string)"RWR_PostRaidTitleFailure".Translate(factionName);
 
             string outcome = succeeded
-                ? $"The raiders achieved their objective: {goal.targetDescription}."
-                : $"The raiders of {factionName} were driven off before achieving their objective.";
+                ? (string)"RWR_PostRaidOutcomeSuccess".Translate(goal.targetDescription)
+                : (string)"RWR_PostRaidOutcomeFailure".Translate(factionName);
 
             string goodwillLine = deltaRounded > 0
-                ? $"Goodwill with {factionName}: +{deltaRounded}"
+                ? (string)"RWR_PostRaidGoodwillPositive".Translate(factionName, deltaRounded)
                 : deltaRounded < 0
-                    ? $"Goodwill with {factionName}: {deltaRounded}"
+                    ? (string)"RWR_PostRaidGoodwillNegative".Translate(factionName, deltaRounded)
                     : null;
 
             string body = goodwillLine != null

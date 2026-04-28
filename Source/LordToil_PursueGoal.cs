@@ -375,7 +375,7 @@ namespace RaidsWithinReason
                     Lord rescueLord = LordMaker.MakeNewLord(raider.Faction, new LordJob_ExitMapNear(), map);
                     rescueLord.AddPawn(targetPawn);
 
-                    Messages.Message($"{targetPawn.LabelShort} has been freed by {raider.Faction.Name} raiders!", targetPawn, MessageTypeDefOf.NegativeEvent);
+                    Messages.Message("RWR_MessagePrisonerFreedByRaid".Translate(targetPawn.LabelShort, raider.Faction.Name), targetPawn, MessageTypeDefOf.NegativeEvent);
                     
                     map.GetComponent<RaidGoalTracker>()?.MarkSuccess(lord);
                     break;

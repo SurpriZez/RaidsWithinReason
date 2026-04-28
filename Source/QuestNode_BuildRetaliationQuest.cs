@@ -35,10 +35,8 @@ namespace RaidsWithinReason
             timerPart.quest = quest;
             quest.PartsListForReading.Add(timerPart);
 
-            string nameText = $"Retaliation: {faction?.Name}";
-            string descText =
-                $"Having refused the demands of {faction?.Name}, they are preparing a retaliatory raid.\n\n" +
-                $"Estimated arrival: {delayTicks.ToStringTicksToPeriod()}";
+            string nameText = "RWR_RetaliationQuestName".Translate(faction?.Name ?? "RWR_UnknownFaction".Translate());
+            string descText = "RWR_RetaliationQuestDesc".Translate(faction?.Name ?? "RWR_UnknownFaction".Translate(), delayTicks.ToStringTicksToPeriod());
 
             QuestGen.AddQuestNameRules(new List<Rule>
             {

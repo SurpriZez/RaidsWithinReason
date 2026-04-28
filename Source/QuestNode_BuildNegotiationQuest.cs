@@ -58,12 +58,12 @@ namespace RaidsWithinReason
 
             string requireLine = BuildRequireLine(request, prisoner);
 
-            string nameText = $"Negotiation: {faction?.Name}";
-            string descText =
-                $"{faction?.Name} demands: {request.template.targetDescription}\n\n" +
-                $"Required: {requireLine}\n" +
-                $"Deadline: {request.template.timeLimitDays} days\n\n" +
-                "Fulfilling the demand will improve relations. Failure triggers an immediate raid.";
+            string nameText = "RWR_NegotiationQuestName".Translate(faction?.Name ?? (string)"RWR_UnknownFaction".Translate());
+            string descText = "RWR_NegotiationQuestDesc".Translate(
+                faction?.Name ?? (string)"RWR_UnknownFaction".Translate(),
+                request.template.targetDescription,
+                requireLine,
+                request.template.timeLimitDays);
 
             QuestGen.AddQuestNameRules(new List<Rule>
             {
@@ -84,9 +84,9 @@ namespace RaidsWithinReason
         private static string BuildRequireLine(NegotiationRequest request, Pawn prisoner)
         {
             if (request.template.demandType == NegotiationDemandType.Pawn)
-                return $"Right-click the negotiator to release prisoner {prisoner?.LabelShort ?? "as demanded"}";
+                return "RWR_NegotiationQuestRequirePawn".Translate(prisoner?.LabelShort ?? (string)"RWR_DemandedPrisoner".Translate());
 
-            return $"Right-click the negotiator to pay {request.TargetDescription}";
+            return "RWR_NegotiationQuestRequireItems".Translate(request.TargetDescription);
         }
     }
 }

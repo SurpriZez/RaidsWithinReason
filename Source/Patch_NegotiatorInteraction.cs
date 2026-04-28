@@ -116,10 +116,10 @@ namespace RaidsWithinReason
             int available = map.resourceCounter.GetCount(thingDef);
             int required  = request.amount;
 
-            string label = $"Pay {request.TargetDescription} to negotiator ({available} available)";
+            string label = "RWR_MenuOptionPayNegotiator".Translate(request.TargetDescription, available);
 
             if (available < required)
-                return new FloatMenuOption(label + " — not enough", null);
+                return new FloatMenuOption(label + " (" + "RWR_NotEnough".Translate() + ")", null);
 
             return new FloatMenuOption(label, () =>
             {
@@ -127,7 +127,7 @@ namespace RaidsWithinReason
                 part.ForceComplete();
                 negotiator.GetLord()?.ReceiveMemo("NegotiatorDismissed");
                 Messages.Message(
-                    "Payment delivered. The negotiator is satisfied.",
+                    "RWR_MessagePaymentDelivered".Translate(),
                     MessageTypeDefOf.PositiveEvent);
             });
         }
@@ -137,11 +137,11 @@ namespace RaidsWithinReason
         {
             Pawn prisoner = part.requiredPrisoner;
             if (prisoner == null || prisoner.Dead || prisoner.Destroyed)
-                return new FloatMenuOption("Required prisoner is no longer available", null);
+                return new FloatMenuOption("RWR_MenuOptionPrisonerUnavailable".Translate(), null);
             if (!prisoner.IsPrisonerOfColony)
-                return new FloatMenuOption("Prisoner already released", null);
+                return new FloatMenuOption("RWR_MenuOptionPrisonerReleased".Translate(), null);
 
-            return new FloatMenuOption($"Hand over {prisoner.LabelShort} to negotiator", () =>
+            return new FloatMenuOption("RWR_MenuOptionHandoverPrisoner".Translate(prisoner.LabelShort), () =>
             {
                 if (NegotiatorUtil.HandoverPrisoner(prisoner, negotiator, map))
                 {
@@ -250,7 +250,7 @@ namespace RaidsWithinReason
             prisoner.mindState.enemyTarget = null;
             prisoner.mindState.duty = new Verse.AI.PawnDuty(DutyDefOf.ExitMapBest);
 
-            Messages.Message($"{prisoner.LabelShort} has been handed over and released.", MessageTypeDefOf.PositiveEvent);
+            Messages.Message("RWR_MessagePrisonerHandedOver".Translate(prisoner.LabelShort), MessageTypeDefOf.PositiveEvent);
             return true;
         }
 
@@ -286,8 +286,8 @@ namespace RaidsWithinReason
                 Log.Message($"[RWR] Damage escalation triggered via {debugSource} on negotiator {pawn.LabelShort}. Party is fighting back!");
                 
                 string msgText = debugSource.Contains("Kill") 
-                    ? $"Negotiator murdered! {faction.Name} is launching an immediate retaliatory strike!" 
-                    : $"Negotiator harmed! {faction.Name} is launching a retaliatory strike!";
+                    ? (string)"RWR_MessageNegotiatorMurdered".Translate(faction.Name)
+                    : (string)"RWR_MessageNegotiatorHarmed".Translate(faction.Name);
                 
                 Messages.Message(msgText, MessageTypeDefOf.ThreatBig);
                 

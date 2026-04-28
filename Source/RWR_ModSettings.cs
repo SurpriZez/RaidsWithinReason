@@ -30,7 +30,7 @@ namespace RaidsWithinReason
             Settings = GetSettings<RWR_Settings>();
         }
 
-        public override string SettingsCategory() => "Raids Within Reason";
+        public override string SettingsCategory() => "RWR_SettingsCategory".Translate();
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
@@ -38,24 +38,24 @@ namespace RaidsWithinReason
             listing.Begin(inRect);
 
             listing.CheckboxLabeled(
-                "Show pre-raid goal announcement letter",
+                "RWR_Setting_EnableGoalLetters".Translate(),
                 ref Settings.enableGoalLetters);
 
             listing.CheckboxLabeled(
-                "Raiders retreat after achieving their objective",
+                "RWR_Setting_EnableRetreatOnSuccess".Translate(),
                 ref Settings.enableRetreatOnSuccess);
 
             listing.Gap(6f);
 
-            listing.Label($"Chance a raid ignores goals and attacks randomly (0 = all raids have purpose): {Settings.chaoticRaidChance:P0}");
+            listing.Label("RWR_Setting_ChaoticRaidChance".Translate(Settings.chaoticRaidChance.ToStringPercent()));
             Settings.chaoticRaidChance = listing.Slider(Settings.chaoticRaidChance, 0f, 1f);
             listing.Gap(4f);
 
-            listing.Label($"Chance faction negotiates before raiding: {Settings.negotiationChance:P0}");
+            listing.Label("RWR_Setting_NegotiationChance".Translate(Settings.negotiationChance.ToStringPercent()));
             Settings.negotiationChance = listing.Slider(Settings.negotiationChance, 0f, 1f);
             listing.Gap(4f);
 
-            listing.Label($"Min days between negotiators from same faction: {Settings.negotiatorCooldownDays}");
+            listing.Label("RWR_Setting_NegotiatorCooldownDays".Translate(Settings.negotiatorCooldownDays));
             Settings.negotiatorCooldownDays = Mathf.RoundToInt(
                 listing.Slider(Settings.negotiatorCooldownDays, 0f, 60f));
 

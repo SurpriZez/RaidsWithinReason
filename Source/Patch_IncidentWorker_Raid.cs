@@ -46,6 +46,8 @@ namespace RaidsWithinReason
                         __result = true;
                         return false; // cancel the raid incident COMPLETELY (bypasses SendStandardLetter)
                     }
+
+                    Log.Error($"[RWR] Failed to execute negotiator incident for faction {faction?.Name ?? "null"}. Check if the faction can negotiate and if the cooldown is working correctly.");
                 }
                 // Negotiator failed to spawn — fall through to normal raid.
             }
@@ -95,7 +97,7 @@ namespace RaidsWithinReason
                     var letter = new ChoiceLetter_RaidGoalAnnouncement
                     {
                         def            = DefDatabase<LetterDef>.GetNamed("RWR_RaidGoalAnnouncement"),
-                        Label          = $"{faction.Name} raids with purpose",
+                        Label          = "RWR_RaidGoalLetterLabel".Translate(faction.Name),
                         Text           = BuildLetterText(faction, goal, targetPawn),
                         lookTargets    = targetPawn != null ? new LookTargets(targetPawn) : new LookTargets(map.Parent),
                         relatedFaction = faction,
@@ -110,6 +112,7 @@ namespace RaidsWithinReason
         {
             if (faction == null || map == null) return false;
             if (!faction.def.humanlikeFaction) return false; // mechanoids and insects don't negotiate
+            if (faction.PlayerRelationKind != FactionRelationKind.Hostile) return false; // only hostile factions should negotiate
             if (!Rand.Chance(RWR_Mod.Settings.negotiationChance)) return false;
 
             var cooldown = Current.Game.GetComponent<NegotiatorCooldownComponent>();
@@ -120,22 +123,20 @@ namespace RaidsWithinReason
         {
             bool effectiveRetreat = goal.retreatOnSuccess && RWR_Mod.Settings.enableRetreatOnSuccess;
             string retreatLine = effectiveRetreat
-                ? "If the raiders achieve their objective they will retreat — stopping them before that will send them fleeing."
-                : "The raiders will not retreat even if they achieve their goal. Expect a sustained assault.";
+                ? (string)"RWR_RaidGoalRetreatYes".Translate()
+                : (string)"RWR_RaidGoalRetreatNo".Translate();
 
             string desc = goal.targetDescription;
             if (goal.goalType == RaidGoalType.Revenge && target != null)
             {
-                desc = $"kill {target.NameShortColored.Resolve()} in retaliation";
+                desc = "RWR_RaidGoalDescRevenge".Translate(target.NameShortColored.Resolve());
             }
             else if (goal.goalType == RaidGoalType.Capture && target != null)
             {
-                desc = $"capture {target.NameShortColored.Resolve()}";
+                desc = "RWR_RaidGoalDescCapture".Translate(target.NameShortColored.Resolve());
             }
 
-            return $"Raiders from {faction.Name} have arrived with a specific objective:\n\n" +
-                   $"\"{desc}\"\n\n" +
-                   retreatLine;
+            return "RWR_RaidGoalLetterText".Translate(faction.Name, desc, retreatLine);
         }
     }
 
@@ -292,7 +293,7 @@ namespace RaidsWithinReason
         {
             get
             {
-                var opt = new DiaOption("Understood");
+                var opt = new DiaOption("RWR_Understood".Translate());
                 opt.resolveTree = true;
                 opt.action      = () => Find.LetterStack.RemoveLetter(this);
                 yield return opt;

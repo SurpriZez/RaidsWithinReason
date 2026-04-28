@@ -10,7 +10,7 @@ namespace RaidsWithinReason
     {
         public Alert_NegotiatorPresent()
         {
-            this.defaultLabel = "Negotiator present";
+            this.defaultLabel = "RWR_AlertNegotiatorPresentLabel".Translate();
             this.defaultPriority = AlertPriority.Critical;
         }
 
@@ -18,7 +18,7 @@ namespace RaidsWithinReason
 
         public override TaggedString GetExplanation()
         {
-            return "One or more negotiators from another faction are waiting at your borders. You should talk to them or consider their demands before they lose patience.";
+            return "RWR_AlertNegotiatorPresentDesc".Translate();
         }
 
 

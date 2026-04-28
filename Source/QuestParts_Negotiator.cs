@@ -103,8 +103,8 @@ namespace RaidsWithinReason
             {
                 if (completed) return null;
                 if (request?.template?.demandType == NegotiationDemandType.Pawn)
-                    return $"Release prisoner: {requiredPrisoner?.LabelShort ?? "demanded prisoner"}";
-                return $"Deliver {request?.TargetDescription} to the negotiator";
+                    return "RWR_QuestPart_ReleasePrisoner".Translate(requiredPrisoner?.LabelShort ?? (string)"RWR_DemandedPrisoner".Translate());
+                return "RWR_QuestPart_DeliverDemand".Translate(request?.TargetDescription);
             }
         }
 
@@ -184,8 +184,8 @@ namespace RaidsWithinReason
             }
 
             Find.LetterStack.ReceiveLetter(
-                "Demand Expired",
-                $"Your failure to comply with the demands of {faction?.Name} has provoked a raid.",
+                "RWR_DemandExpiredTitle".Translate(),
+                "RWR_DemandExpiredText".Translate(faction?.Name ?? "RWR_UnknownFaction".Translate()),
                 LetterDefOf.ThreatBig,
                 new LookTargets(map.Parent));
 
@@ -198,7 +198,7 @@ namespace RaidsWithinReason
             {
                 if (triggered || quest?.State != QuestState.Ongoing) return null;
                 int ticks = expiryTick - Find.TickManager.TicksGame;
-                return ticks > 0 ? $"Time remaining: {ticks.ToStringTicksToPeriod()}" : "Expired";
+                return ticks > 0 ? "RWR_QuestPart_TimeRemaining".Translate(ticks.ToStringTicksToPeriod()) : (string)"RWR_QuestPart_Expired".Translate();
             }
         }
 
@@ -231,9 +231,8 @@ namespace RaidsWithinReason
                 canSendHostilityLetter: false);
 
             Find.LetterStack.ReceiveLetter(
-                "Demand Fulfilled",
-                $"You have fulfilled the demands of {faction?.Name}. " +
-                $"Your relationship with them has improved by {Mathf.RoundToInt(goodwillChange)} goodwill.",
+                "RWR_DemandFulfilledTitle".Translate(),
+                "RWR_DemandFulfilledText".Translate(faction?.Name ?? "RWR_UnknownFaction".Translate(), Mathf.RoundToInt(goodwillChange)),
                 LetterDefOf.PositiveEvent);
 
             quest.End(QuestEndOutcome.Success, sendLetter: false);
